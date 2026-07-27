@@ -20,15 +20,15 @@
 <meta name="twitter:description" content="Tradable Predictive Market Analyses. Dated on completion. Always pre-dated.">
 <meta name="twitter:image" content="https://thepimpreport.com/assets/media/hero-poster.jpg">
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Only third party left is the IPFS gateway, which still serves the 28 video
+     thumbnails on the portfolio view. -->
 <link rel="preconnect" href="https://copper-urgent-mole-3.mypinata.cloud" crossorigin>
 <link rel="preload" as="image" href="assets/media/hero-poster.jpg" fetchpriority="high">
-<!-- Fonts off the critical path: display=swap paints the fallback immediately, so
-     blocking first render on a third-party round trip buys nothing on mobile. -->
-<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..110,400..900&family=Instrument+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500;700&display=swap">
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..110,400..900&family=Instrument+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<noscript><link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..110,400..900&family=Instrument+Sans:wght@400..700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet"></noscript>
+<!-- Fonts are self-hosted (see @font-face below), so they start downloading with
+     the document instead of waiting on a stylesheet from a third-party origin.
+     Mono is left to the CSS: it only sets small labels, where swap is invisible. -->
+<link rel="preload" as="font" type="font/woff2" href="assets/fonts/archivo-800.woff2" crossorigin>
+<link rel="preload" as="font" type="font/woff2" href="assets/fonts/instrumentsans.woff2" crossorigin>
 
 <script type="application/ld+json">
 {
@@ -52,6 +52,19 @@
 </script>
 
 <style>
+/* ─────────────────────────────────────────────────────────────
+   FONTS — self-hosted, latin subset
+   Archivo is instanced at wght 800 / wdth 105, the only values the display
+   face is ever used at, which took it from 88 KB variable to 11.5 KB.
+   Body and mono stay variable because all their weights are in use.
+   ───────────────────────────────────────────────────────────── */
+@font-face{font-family:"Archivo";src:url("assets/fonts/archivo-800.woff2") format("woff2");
+  font-weight:700 900;font-stretch:105%;font-style:normal;font-display:swap}
+@font-face{font-family:"Instrument Sans";src:url("assets/fonts/instrumentsans.woff2") format("woff2");
+  font-weight:400 700;font-style:normal;font-display:swap}
+@font-face{font-family:"JetBrains Mono";src:url("assets/fonts/jetbrainsmono.woff2") format("woff2");
+  font-weight:400 600;font-style:normal;font-display:swap}
+
 /* ─────────────────────────────────────────────────────────────
    TOKENS
    ───────────────────────────────────────────────────────────── */
@@ -665,7 +678,7 @@ p{margin:0 0 1.05em}
 </head>
 <body>
 <div class="preload" id="preload" aria-hidden="true">
-  <img decoding="async" src="https://copper-urgent-mole-3.mypinata.cloud/ipfs/bafybeigogtkehmufthe533dftlbaozlzb2ref6ilbmtz7hdkywkpj3pjxy/img/TPR.NFT/WebDerbyWht1.png" alt="">
+  <img decoding="async" src="assets/img/preload-mark.webp" width="100" height="67" alt="">
   <i class="preload-bar"></i>
 </div>
 <a class="skip" href="#main">Skip to content</a>
@@ -679,8 +692,8 @@ p{margin:0 0 1.05em}
   <div class="nav-in">
     <a class="brand" href="#/" data-route="/" aria-label="The P.I.M.P. Report — home">
       <picture>
-        <source media="(prefers-color-scheme: light)" srcset="https://copper-urgent-mole-3.mypinata.cloud/ipfs/bafybeigogtkehmufthe533dftlbaozlzb2ref6ilbmtz7hdkywkpj3pjxy/img/TPR.NFT/tpr-logoblack1.png">
-        <img decoding="async" src="https://copper-urgent-mole-3.mypinata.cloud/ipfs/bafybeigogtkehmufthe533dftlbaozlzb2ref6ilbmtz7hdkywkpj3pjxy/img/TPR.NFT/tpr-logowhite1.png" alt="The P.I.M.P. Report">
+        <source media="(prefers-color-scheme: light)" srcset="assets/img/logo-black.webp">
+        <img decoding="async" src="assets/img/logo-white.webp" width="1100" height="115" alt="The P.I.M.P. Report" fetchpriority="high">
       </picture>
     </a>
     <nav class="nav-links" aria-label="Primary">
@@ -849,11 +862,11 @@ p{margin:0 0 1.05em}
         <p class="eyebrow" style="margin-top:26px">Like, subscribe, and share</p>
         <div class="handles">
           <a class="handle" href="https://www.tiktok.com/@bigpimpin504" target="_blank" rel="noopener">
-            <img decoding="async" src="https://copper-urgent-mole-3.mypinata.cloud/ipfs/bafybeigogtkehmufthe533dftlbaozlzb2ref6ilbmtz7hdkywkpj3pjxy/img/TPR.NFT/tt.png" alt="" loading="lazy">
+            <img decoding="async" src="assets/img/icon-tiktok.webp" width="102" height="57" alt="" loading="lazy">
             <span><b>@bigpimpin504</b><small>TikTok</small></span>
           </a>
           <a class="handle" href="https://www.youtube.com/@prettyred5044" target="_blank" rel="noopener">
-            <img decoding="async" src="https://copper-urgent-mole-3.mypinata.cloud/ipfs/bafybeigogtkehmufthe533dftlbaozlzb2ref6ilbmtz7hdkywkpj3pjxy/img/TPR.NFT/yt.png" alt="" loading="lazy">
+            <img decoding="async" src="assets/img/icon-youtube.webp" width="102" height="102" alt="" loading="lazy">
             <span><b>@prettyred5044</b><small>YouTube</small></span>
           </a>
         </div>
@@ -930,14 +943,14 @@ p{margin:0 0 1.05em}
   <div class="wrap">
     <div class="foot-top">
       <div>
-        <img decoding="async" class="foot-logo" src="https://copper-urgent-mole-3.mypinata.cloud/ipfs/bafybeigogtkehmufthe533dftlbaozlzb2ref6ilbmtz7hdkywkpj3pjxy/img/TPR.NFT/tpr-logowhite1.png" alt="The P.I.M.P. Report">
+        <img decoding="async" class="foot-logo" src="assets/img/logo-white.webp" width="1100" height="115" alt="The P.I.M.P. Report" loading="lazy">
         <p class="lede" style="font-size:.95rem">The Proven Insights on Market Predictability Report. Predictive market analyses, dated on completion — now tradable as ERC-721 assets.</p>
         <div style="display:flex;gap:14px;align-items:center;margin-top:20px">
           <a class="foot-social" href="https://www.tiktok.com/@bigpimpin504" target="_blank" rel="noopener" aria-label="TikTok">
-            <img decoding="async" src="https://copper-urgent-mole-3.mypinata.cloud/ipfs/bafybeigogtkehmufthe533dftlbaozlzb2ref6ilbmtz7hdkywkpj3pjxy/img/TPR.NFT/ttbranding.png" alt="TikTok" style="height:28px;width:auto" loading="lazy">
+            <img decoding="async" src="assets/img/brand-tiktok.webp" alt="TikTok" style="height:28px;width:auto" loading="lazy">
           </a>
           <a class="foot-social" href="https://www.youtube.com/@prettyred5044" target="_blank" rel="noopener" aria-label="YouTube">
-            <img decoding="async" src="https://copper-urgent-mole-3.mypinata.cloud/ipfs/bafybeigogtkehmufthe533dftlbaozlzb2ref6ilbmtz7hdkywkpj3pjxy/img/TPR.NFT/ytbranding.png" alt="YouTube" style="height:28px;width:auto" loading="lazy">
+            <img decoding="async" src="assets/img/brand-youtube.webp" alt="YouTube" style="height:28px;width:auto" loading="lazy">
           </a>
         </div>
       </div>
@@ -1320,7 +1333,14 @@ $("#vidChips").addEventListener("click",e=>{
   b.setAttribute("aria-pressed","true"); renderVideos();
 });
 $("#vidSearch").addEventListener("input",debounce(renderVideos));
-renderVideos();
+/* The portfolio view starts hidden, and building its 28 cards was the single
+   biggest blocking task on first load. Defer it until the route is entered. */
+let videosBuilt = false;
+function ensureVideos(){
+  if(videosBuilt) return;
+  videosBuilt = true;
+  renderVideos();
+}
 
 /* ── Lite YouTube: only load the iframe on click (keeps LCP fast) ── */
 document.addEventListener("click",e=>{
@@ -1416,6 +1436,7 @@ function route(){
   if(modal.classList.contains("open")) closeModal();
   setDrawer(false);
   const isVideos = location.hash.startsWith("#/videos");
+  if(isVideos) ensureVideos();
   $("#view-home").classList.toggle("active",!isVideos);
   $("#view-videos").classList.toggle("active",isVideos);
   $$("[data-route]").forEach(a=>a.classList.toggle("on", a.dataset.route === (isVideos?"/videos":"/")));
