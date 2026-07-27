@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Admin · The P.I.M.P. Report</title>
+<meta name="theme-color" content="#060708">
+<link rel="preload" as="font" type="font/woff2" href="assets/fonts/archivo-800.woff2" crossorigin>
+<link rel="preload" as="font" type="font/woff2" href="assets/fonts/instrumentsans.woff2" crossorigin>
+<style>
+@font-face{font-family:"Archivo";src:url("assets/fonts/archivo-800.woff2") format("woff2");
+  font-weight:700 900;font-stretch:105%;font-style:normal;font-display:swap}
+@font-face{font-family:"Instrument Sans";src:url("assets/fonts/instrumentsans.woff2") format("woff2");
+  font-weight:400 700;font-style:normal;font-display:swap}
+@font-face{font-family:"JetBrains Mono";src:url("assets/fonts/jetbrainsmono.woff2") format("woff2");
+  font-weight:400 600;font-style:normal;font-display:swap}
+
+:root{
+  --ink:#060708; --surface:#15181d; --surface-2:#1b1f26; --raise:#20242c;
+  --line:rgba(255,255,255,.09); --line-2:rgba(255,255,255,.16);
+  --text:#f4f5f6; --muted:#949aa3; --muted-2:#666c75;
+
+  /* Series colour: the brand's own --red-hot. OKLCH L 0.668 (inside the dark
+     categorical band 0.48-0.67), 5.34:1 on --surface. Every chart is single
+     series in this one hue, so nothing is distinguished by colour alone. */
+  --series:#ff4a3d;
+  --series-soft:rgba(255,74,61,.16);
+  --track:rgba(255,255,255,.07);
+
+  /* Reserved status palette. Always shipped with an icon or a text label. */
+  --good:#0ca30c; --warn:#fab219; --crit:#d03b3b;
+
+  --f-display:"Archivo",system-ui,sans-serif;
+  --f-body:"Instrument Sans",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,monospace;
+  --r:14px; --r-lg:20px;
+  --pad:clamp(16px,3vw,32px);
+  --ease:cubic-bezier(.22,1,.36,1);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scrollbar-gutter:stable}
+body{margin:0;background:var(--ink);color:var(--text);font-family:var(--f-body);
+  font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;
+  -webkit-tap-highlight-color:transparent}
+h1,h2,h3{font-family:var(--f-display);font-weight:800;letter-spacing:-.03em;line-height:1.1;margin:0;
+  font-stretch:105%;overflow-wrap:break-word}
+a{color:inherit}
+button,input,select{font:inherit;color:inherit}
+button{background:none;border:none;cursor:pointer}
+:focus-visible{outline:2px solid var(--series);outline-offset:2px;border-radius:6px}
+.mono{font-family:var(--f-mono)}
+.tnum{font-variant-numeric:tabular-nums}
+
+/* ── shell ── */
+.wrap{max-width:1320px;margin:0 auto;
+  padding-left:max(var(--pad),env(safe-area-inset-left));
+  padding-right:max(var(--pad),env(safe-area-inset-right))}
+.top{position:sticky;top:0;z-index:20;background:rgba(6,7,8,.94);
+  border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top)}
+.top-in{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding-block:14px}
+.top h1{font-size:1.15rem}
+.badge{font-family:var(--f-mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+  padding:5px 10px;border-radius:999px;border:1px solid var(--line-2);color:var(--muted);white-space:nowrap}
+.badge.live{color:var(--good);border-color:rgba(12,163,12,.5)}
+.badge.local{color:var(--warn);border-color:rgba(250,178,25,.45)}
+.spacer{margin-left:auto}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;
+  padding:9px 16px;border-radius:999px;border:1px solid var(--line-2);font-size:.88rem;font-weight:600;
+  transition:background .2s,border-color .2s}
+.btn:hover{background:rgba(255,255,255,.06)}
+.btn-primary{background:var(--series);border-color:transparent;color:#1a0603}
+.btn-primary:hover{background:#ff6154}
+.seg{display:flex;gap:2px;padding:3px;border-radius:999px;border:1px solid var(--line);background:var(--surface)}
+.seg button{font-family:var(--f-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+  padding:8px 13px;border-radius:999px;color:var(--muted);min-height:36px}
+.seg button[aria-pressed="true"]{background:var(--series);color:#1a0603;font-weight:600}
+
+main{padding-block:26px 80px}
+.grid{display:grid;gap:16px}
+.g-kpi{grid-template-columns:repeat(auto-fit,minmax(min(184px,100%),1fr))}
+.g-2{grid-template-columns:repeat(auto-fit,minmax(min(420px,100%),1fr))}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:20px}
+.card h2{font-size:.95rem;letter-spacing:-.01em}
+.card-head{display:flex;align-items:baseline;gap:10px;margin-bottom:4px}
+.card-sub{font-size:.8rem;color:var(--muted-2);margin:0 0 18px}
+.sec-title{font-family:var(--f-mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--muted-2);margin:34px 0 14px;display:flex;align-items:center;gap:12px}
+.sec-title::after{content:"";flex:1;height:1px;background:var(--line)}
+
+/* ── stat tile ── */
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+.kpi .lbl{font-family:var(--f-mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted-2)}
+.kpi .val{font-family:var(--f-display);font-weight:800;font-size:2.1rem;line-height:1.05;margin-top:10px;
+  letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.kpi .foot{font-size:.76rem;color:var(--muted);margin-top:6px;display:flex;align-items:center;gap:6px}
+.kpi svg{display:block;margin-top:12px;width:100%;height:26px;overflow:visible}
+
+/* ── bar list (plain HTML: responsive, labelled, no colour-only meaning) ── */
+.bars{display:flex;flex-direction:column;gap:2px}
+.bar{display:grid;grid-template-columns:1fr auto;gap:4px 12px;padding:7px 0;position:relative;
+  border-radius:8px;transition:background .15s}
+.bar:hover{background:rgba(255,255,255,.035)}
+.bar .name{font-size:.86rem;min-width:0;overflow-wrap:break-word}
+.bar .n{font-family:var(--f-mono);font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums;
+  align-self:center;white-space:nowrap}
+.bar .track{grid-column:1/-1;height:9px;border-radius:4px;background:var(--track);overflow:hidden}
+/* display:block matters — the fill is a <span>, and width/height are ignored on
+   an inline box, which renders every bar empty. */
+.bar .fill{display:block;height:100%;border-radius:4px;background:var(--series);min-width:3px;
+  transition:width .5s var(--ease)}
+.bar.q .name{font-weight:500}
+.bar .meta{grid-column:1/-1;font-family:var(--f-mono);font-size:10px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--muted-2);margin-top:3px}
+
+/* ── meters ── */
+.meters{display:flex;flex-direction:column;gap:14px}
+.meter .row{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:6px}
+.meter .row b{font-weight:500;font-size:.88rem}
+.meter .row span{font-family:var(--f-mono);font-size:.78rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.meter .track{height:9px;border-radius:4px;background:var(--track);overflow:hidden}
+.meter .fill{height:100%;border-radius:4px;background:var(--series)}
+
+/* ── line chart ── */
+.chart{position:relative}
+.chart svg{display:block;width:100%;height:230px;overflow:visible}
+.chart .gridline{stroke:rgba(255,255,255,.07);stroke-width:1}
+.chart .axis{font-family:var(--f-mono);font-size:9.5px;fill:var(--muted-2);letter-spacing:.08em}
+.chart .area{fill:url(#gradSeries)}
+.chart .line{fill:none;stroke:var(--series);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.chart .cross{stroke:var(--line-2);stroke-width:1;stroke-dasharray:3 3}
+.chart .dot{fill:var(--series);stroke:var(--surface);stroke-width:2}
+.tip{position:absolute;pointer-events:none;opacity:0;transform:translate(-50%,-120%);
+  background:var(--raise);border:1px solid var(--line-2);border-radius:10px;padding:8px 11px;
+  font-size:.78rem;white-space:nowrap;transition:opacity .12s;z-index:5;
+  box-shadow:0 12px 30px -12px rgba(0,0,0,.8)}
+.tip b{font-family:var(--f-mono);color:var(--series)}
+.tip.on{opacity:1}
+
+/* ── tables ── */
+.tools{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.search{position:relative;flex:1 1 240px;min-width:0}
+.search input{width:100%;min-height:42px;padding:10px 14px;border-radius:999px;border:1px solid var(--line);
+  background:var(--surface-2);font-size:16px}
+.search input:focus{outline:none;border-color:rgba(255,74,61,.55)}
+.tbl-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+table{width:100%;border-collapse:collapse;font-size:.86rem;min-width:620px}
+th{text-align:left;font-family:var(--f-mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--muted-2);font-weight:500;padding:12px 14px;border-bottom:1px solid var(--line);
+  white-space:nowrap;background:var(--surface-2);position:sticky;top:0}
+th button{font:inherit;letter-spacing:inherit;text-transform:inherit;color:inherit;display:flex;gap:5px;align-items:center}
+th button:hover{color:var(--text)}
+td{padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover{background:rgba(255,255,255,.028)}
+td.msg{max-width:340px;color:var(--muted);white-space:pre-wrap}
+td .when{font-family:var(--f-mono);font-size:.76rem;color:var(--muted-2);white-space:nowrap}
+td a{color:var(--series);text-decoration:none}
+td a:hover{text-decoration:underline}
+
+/* ── states ── */
+.empty{padding:34px 20px;text-align:center;color:var(--muted)}
+.empty b{display:block;font-family:var(--f-display);font-size:1.05rem;color:var(--text);margin-bottom:6px}
+.empty p{margin:0;font-size:.85rem;max-width:46ch;margin-inline:auto}
+.note{display:flex;gap:11px;align-items:flex-start;padding:14px 16px;border-radius:var(--r);
+  border:1px solid var(--line);background:var(--surface);font-size:.85rem;color:var(--muted)}
+.note .ico{flex-shrink:0;width:18px;height:18px;margin-top:1px}
+.note.warn{border-color:rgba(250,178,25,.35);background:rgba(250,178,25,.06)}
+.note.warn .ico{color:var(--warn)}
+.note b{color:var(--text)}
+.note code{font-family:var(--f-mono);font-size:.85em;background:rgba(255,255,255,.08);padding:2px 5px;border-radius:4px}
+
+/* ── gate ── */
+.gate{min-height:100svh;display:grid;place-items:center;padding:24px}
+.gate-card{width:100%;max-width:400px;background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--r-lg);padding:clamp(24px,5vw,34px)}
+.gate-card h1{font-size:1.4rem;margin-bottom:8px}
+.gate-card p{color:var(--muted);font-size:.88rem;margin:0 0 22px}
+.field{display:flex;flex-direction:column;gap:7px;margin-bottom:14px}
+.field label{font-family:var(--f-mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted-2)}
+.field input{min-height:46px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);
+  background:var(--surface-2);font-size:16px}
+.field input:focus{outline:none;border-color:rgba(255,74,61,.55)}
+.gate .btn{width:100%;margin-top:8px}
+.err{color:#ff8b80;font-size:.85rem;margin-top:12px;min-height:1.2em}
+[hidden]{display:none!important}
+
+@media(max-width:640px){
+  .card{padding:16px}
+  .kpi .val{font-size:1.75rem}
+  .top-in{gap:10px}
+  .top h1{font-size:1rem;width:100%}
+}
+/* Touch devices, at any width — a tablet needs thumb-sized targets just as much
+   as a phone, and :hover latches after a tap so nothing may stay lifted. */
+@media(hover:none){
+  .seg button{min-height:44px;padding:11px 15px}
+  th button{padding-block:14px}
+  .btn{min-height:44px}
+  .btn:hover,.bar:hover,tbody tr:hover{background:none}
+  .btn-primary:hover{background:var(--series)}
+  .btn:active{transform:scale(.97)}
+}
+@media(prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════ SIGN IN ══════════ -->
+<div class="gate" id="gate">
+  <form class="gate-card" id="gateForm">
+    <h1>Report Admin</h1>
+    <p id="gateMsg">Sign in to see leads, traffic and what people are asking the assistant.</p>
+    <div class="field">
+      <label for="em">Email</label>
+      <input id="em" type="email" autocomplete="username" required>
+    </div>
+    <div class="field">
+      <label for="pw">Password</label>
+      <input id="pw" type="password" autocomplete="current-password" required>
+    </div>
+    <button class="btn btn-primary" type="submit" id="gateBtn">Sign in</button>
+    <p class="err" id="gateErr" role="status"></p>
+  </form>
+</div>
+
+<!-- ══════════ DASHBOARD ══════════ -->
+<div id="app" hidden>
+  <header class="top">
+    <div class="wrap top-in">
+      <h1>Report Admin</h1>
+      <span class="badge" id="connBadge">checking…</span>
+      <div class="spacer"></div>
+      <div class="seg" id="range" role="group" aria-label="Date range">
+        <button data-days="7">7d</button>
+        <button data-days="30" aria-pressed="true">30d</button>
+        <button data-days="90">90d</button>
+        <button data-days="0">All</button>
+      </div>
+      <button class="btn" id="reload">Refresh</button>
+      <button class="btn" id="signout" hidden>Sign out</button>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div id="banner"></div>
+
+    <div class="sec-title">Overview</div>
+    <div class="grid g-kpi" id="kpis"></div>
+
+    <div class="sec-title">Traffic</div>
+    <div class="card">
+      <div class="card-head"><h2>Visits over time</h2></div>
+      <p class="card-sub" id="visitsSub">Sessions per day.</p>
+      <div class="chart" id="visitsChart"></div>
+    </div>
+
+    <div class="grid g-2" style="margin-top:16px">
+      <div class="card">
+        <div class="card-head"><h2>Where visitors come from</h2></div>
+        <p class="card-sub">Referrer of the first page in each session.</p>
+        <div id="sources"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>Devices</h2></div>
+        <p class="card-sub">Share of sessions by screen size.</p>
+        <div id="devices"></div>
+      </div>
+    </div>
+
+    <div class="sec-title">What people ask the assistant</div>
+    <div class="grid g-2">
+      <div class="card">
+        <div class="card-head"><h2>Most asked</h2></div>
+        <p class="card-sub">Grouped by question, most frequent first.</p>
+        <div id="asked"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>Asked but not answered</h2></div>
+        <p class="card-sub">The assistant found nothing on the site for these. Each one is a content gap worth filling.</p>
+        <div id="unanswered"></div>
+      </div>
+    </div>
+
+    <div class="sec-title">Interest</div>
+    <div class="grid g-2">
+      <div class="card">
+        <div class="card-head"><h2>Sections read</h2></div>
+        <p class="card-sub">Sections that came into view, by session count.</p>
+        <div id="sections"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>NFTs opened</h2></div>
+        <p class="card-sub">Which pieces people opened for a closer look.</p>
+        <div id="nfts"></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <div class="card-head"><h2>Clicks off the site</h2></div>
+      <p class="card-sub">Where visitors went next — the closest thing to an intent signal.</p>
+      <div id="outbound"></div>
+    </div>
+
+    <div class="sec-title">Customers</div>
+    <div class="tools">
+      <div class="search"><input type="search" id="leadSearch" placeholder="Search name, email, phone or message…" aria-label="Search leads"></div>
+      <button class="btn" id="leadCsv">Export CSV</button>
+    </div>
+    <div class="tbl-scroll" id="leadsWrap"></div>
+
+    <div class="sec-title">Newsletter subscribers</div>
+    <div class="tools">
+      <div class="search"><input type="search" id="subSearch" placeholder="Search email…" aria-label="Search subscribers"></div>
+      <button class="btn" id="subCsv">Export CSV</button>
+    </div>
+    <div class="tbl-scroll" id="subsWrap"></div>
+  </main>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   CONFIG
+   Paste the same Supabase project URL and anon key you put in
+   index.html. Leave them empty and this dashboard reads the
+   events this browser recorded locally — useful for a preview,
+   but it is not your real customer data. See SETUP-CRM.md.
+   ═══════════════════════════════════════════════════════════ */
+const CLOUD = { url:"", key:"" };
+
+const $  = (s,r=document)=>r.querySelector(s);
+const $$ = (s,r=document)=>[...r.querySelectorAll(s)];
+const esc = s => String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const LIVE = !!(CLOUD.url && CLOUD.key);
+const nf = new Intl.NumberFormat();
+
+/* ── Supabase REST ─────────────────────────────────────────── */
+const TOKEN_KEY = "tpr_admin_token";
+let token = sessionStorage.getItem(TOKEN_KEY) || "";
+
+async function sb(path, opts={}){
+  const r = await fetch(CLOUD.url.replace(/\/$/,"") + path, {
+    ...opts,
+    headers:{ "Content-Type":"application/json", apikey:CLOUD.key,
+              Authorization:"Bearer " + (token || CLOUD.key), ...(opts.headers||{}) }
+  });
+  if(!r.ok) throw Object.assign(new Error("HTTP "+r.status), {status:r.status, body:await r.text().catch(()=>"")});
+  return r.status === 204 ? null : r.json();
+}
+async function signIn(email, password){
+  const r = await fetch(CLOUD.url.replace(/\/$/,"") + "/auth/v1/token?grant_type=password", {
+    method:"POST", headers:{ "Content-Type":"application/json", apikey:CLOUD.key },
+    body:JSON.stringify({ email, password })
+  });
+  const j = await r.json().catch(()=>({}));
+  if(!r.ok || !j.access_token) throw new Error(j.error_description || j.msg || j.error || "Sign in failed");
+  token = j.access_token; sessionStorage.setItem(TOKEN_KEY, token);
+}
+
+/* ── Local mode: what this browser recorded ────────────────── */
+const readLocal = k => { try{ return JSON.parse(localStorage.getItem(k) || "[]"); }catch{ return []; } };
+
+/* ── Load ──────────────────────────────────────────────────── */
+let DATA = { events:[], leads:[], subs:[] };
+let days = 30;
+
+async function load(){
+  if(LIVE){
+    const since = days ? "&created_at=gte." + new Date(Date.now() - days*864e5).toISOString() : "";
+    const [events, leads, subs] = await Promise.all([
+      sb(`/rest/v1/events?select=*&order=created_at.desc&limit=20000${since}`),
+      sb(`/rest/v1/leads?select=*&order=created_at.desc&limit=5000`),
+      sb(`/rest/v1/subscribers?select=*&order=created_at.desc&limit=5000`)
+    ]);
+    DATA = { events, leads, subs };
+  }else{
+    const cut = days ? Date.now() - days*864e5 : 0;
+    const keep = r => !cut || new Date(r.created_at).getTime() >= cut;
+    DATA = { events: readLocal("tpr_events").filter(keep),
+             leads:  readLocal("tpr_leads"),
+             subs:   readLocal("tpr_subs") };
+  }
+  render();
+}
+
+/* ── Aggregation ───────────────────────────────────────────── */
+const of = kind => DATA.events.filter(e => e.kind === kind);
+function tally(rows, keyFn, {unique=false} = {}){
+  const m = new Map();
+  rows.forEach(r=>{
+    const k = keyFn(r); if(!k) return;
+    if(!m.has(k)) m.set(k, {n:0, sessions:new Set()});
+    const v = m.get(k); v.n++; v.sessions.add(r.session);
+  });
+  return [...m.entries()]
+    .map(([k,v]) => ({ key:k, n: unique ? v.sessions.size : v.n }))
+    .sort((a,b) => b.n - a.n);
+}
+const sessionCount = () => new Set(of("session").map(e=>e.session)).size;
+
+function perDay(rows, n){
+  const span = n || (()=>{
+    if(!rows.length) return 30;
+    const oldest = Math.min(...rows.map(r=>new Date(r.created_at).getTime()));
+    return Math.min(180, Math.max(7, Math.ceil((Date.now()-oldest)/864e5)+1));
+  })();
+  const buckets = new Map();
+  for(let i=span-1;i>=0;i--){
+    const d = new Date(Date.now() - i*864e5);
+    buckets.set(d.toISOString().slice(0,10), new Set());
+  }
+  rows.forEach(r=>{
+    const k = String(r.created_at).slice(0,10);
+    if(buckets.has(k)) buckets.get(k).add(r.session);
+  });
+  return [...buckets.entries()].map(([date,set]) => ({date, n:set.size}));
+}
+
+/* ── Components ────────────────────────────────────────────── */
+function empty(title, msg){
+  return `<div class="empty"><b>${esc(title)}</b><p>${esc(msg)}</p></div>`;
+}
+
+function barList(rows, {unit="", meta=null, max=10} = {}){
+  if(!rows.length) return empty("Nothing yet", "This fills in as visitors use the site.");
+  const top = rows.slice(0, max), peak = Math.max(...top.map(r=>r.n)) || 1;
+  return `<div class="bars">` + top.map(r=>`
+    <div class="bar q">
+      <span class="name">${esc(r.key)}</span>
+      <span class="n">${nf.format(r.n)}${esc(unit)}</span>
+      <span class="track"><span class="fill" style="width:${(r.n/peak*100).toFixed(1)}%"></span></span>
+      ${meta ? `<span class="meta">${esc(meta(r))}</span>` : ``}
+    </div>`).join("") + `</div>`;
+}
+
+function meterList(rows){
+  if(!rows.length) return empty("Nothing yet", "This fills in as visitors use the site.");
+  const total = rows.reduce((a,r)=>a+r.n, 0) || 1;
+  return `<div class="meters">` + rows.slice(0,6).map(r=>{
+    const pct = r.n/total*100;
+    return `<div class="meter">
+      <div class="row"><b>${esc(r.key)}</b><span>${pct.toFixed(0)}% · ${nf.format(r.n)}</span></div>
+      <div class="track"><div class="fill" style="width:${pct.toFixed(1)}%"></div></div>
+    </div>`;
+  }).join("") + `</div>`;
+}
+
+function kpi({label, value, foot, spark}){
+  let svg = "";
+  if(spark && spark.length > 1){
+    const peak = Math.max(...spark, 1), w = 100, h = 26;
+    const pts = spark.map((v,i)=>`${(i/(spark.length-1)*w).toFixed(2)},${(h - v/peak*h).toFixed(2)}`).join(" ");
+    svg = `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true">
+      <polyline points="${pts}" fill="none" stroke="var(--series)" stroke-width="1.6"
+        vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+  }
+  return `<div class="kpi">
+    <div class="lbl">${esc(label)}</div>
+    <div class="val tnum">${esc(value)}</div>
+    ${foot ? `<div class="foot">${foot}</div>` : ``}
+    ${svg}</div>`;
+}
+
+/* Line + area, with a crosshair and tooltip on hover/touch. */
+function lineChart(el, series){
+  if(series.length < 2 || series.every(d=>d.n===0)){
+    el.innerHTML = empty("No visits recorded yet",
+      LIVE ? "Sessions appear here as people browse the site."
+           : "Open the site in this browser and the preview will populate.");
+    return;
+  }
+  const W = 720, H = 200, PL = 34, PR = 8, PT = 10, PB = 22;
+  const iw = W - PL - PR, ih = H - PT - PB;
+  const peak = Math.max(...series.map(d=>d.n), 1);
+  const ceil = peak <= 4 ? peak : Math.ceil(peak/4)*4;
+  const X = i => PL + (series.length===1 ? iw/2 : i/(series.length-1)*iw);
+  const Y = v => PT + ih - (v/ceil)*ih;
+
+  const line = series.map((d,i)=>`${i?"L":"M"}${X(i).toFixed(1)} ${Y(d.n).toFixed(1)}`).join(" ");
+  const area = `${line} L${X(series.length-1).toFixed(1)} ${(PT+ih).toFixed(1)} L${X(0).toFixed(1)} ${(PT+ih).toFixed(1)} Z`;
+  // Sessions are whole numbers, so never label the axis "0.5".
+  const ticks = (ceil <= 2 ? [0, ceil] : [0, Math.round(ceil/2), ceil])
+    .filter((v,i,a) => a.indexOf(v) === i);
+  const step = Math.max(1, Math.ceil(series.length/6));
+  const fmt = s => new Date(s+"T00:00:00").toLocaleDateString(undefined,{month:"short",day:"numeric"});
+
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img"
+      aria-label="Sessions per day. Peak ${peak} on ${fmt(series.reduce((a,b)=>b.n>a.n?b:a).date)}.">
+    <defs><linearGradient id="gradSeries" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="var(--series)" stop-opacity=".28"/>
+      <stop offset="100%" stop-color="var(--series)" stop-opacity="0"/>
+    </linearGradient></defs>
+    ${ticks.map(v=>`<line class="gridline" x1="${PL}" x2="${W-PR}" y1="${Y(v).toFixed(1)}" y2="${Y(v).toFixed(1)}"/>
+      <text class="axis" x="${PL-8}" y="${(Y(v)+3.5).toFixed(1)}" text-anchor="end">${v}</text>`).join("")}
+    <path class="area" d="${area}"/>
+    <path class="line" d="${line}"/>
+    ${series.map((d,i)=> i%step===0 || i===series.length-1
+      ? `<text class="axis" x="${X(i).toFixed(1)}" y="${H-6}" text-anchor="middle">${fmt(d.date)}</text>` : "").join("")}
+    <line class="cross" id="cx" y1="${PT}" y2="${PT+ih}" x1="0" x2="0" style="opacity:0"/>
+    <circle class="dot" id="cd" r="4.5" cx="0" cy="0" style="opacity:0"/>
+    <rect id="hit" x="${PL}" y="${PT}" width="${iw}" height="${ih}" fill="transparent" style="cursor:crosshair"/>
+  </svg><div class="tip" id="tip"></div>`;
+
+  const svg = $("svg", el), hit = $("#hit", el), cx = $("#cx", el), cd = $("#cd", el), tip = $("#tip", el);
+  const move = ev => {
+    const box = svg.getBoundingClientRect();
+    const px = ((ev.touches ? ev.touches[0].clientX : ev.clientX) - box.left) / box.width * W;
+    let i = Math.round((px - PL) / (iw || 1) * (series.length - 1));
+    i = Math.max(0, Math.min(series.length - 1, i));
+    const d = series[i], x = X(i), y = Y(d.n);
+    cx.setAttribute("x1", x); cx.setAttribute("x2", x); cx.style.opacity = 1;
+    cd.setAttribute("cx", x); cd.setAttribute("cy", y); cd.style.opacity = 1;
+    tip.innerHTML = `${fmt(d.date)} · <b>${d.n}</b> ${d.n===1?"session":"sessions"}`;
+    tip.style.left = (x / W * box.width) + "px";
+    tip.style.top  = (y / H * box.height) + "px";
+    tip.classList.add("on");
+  };
+  const leave = () => { cx.style.opacity = 0; cd.style.opacity = 0; tip.classList.remove("on"); };
+  hit.addEventListener("mousemove", move);
+  hit.addEventListener("mouseleave", leave);
+  hit.addEventListener("touchstart", move, {passive:true});
+  hit.addEventListener("touchmove", move, {passive:true});
+  hit.addEventListener("touchend", leave);
+}
+
+/* ── Tables ────────────────────────────────────────────────── */
+const when = s => { const d = new Date(s);
+  return isNaN(d) ? "—" : d.toLocaleString(undefined,{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"}); };
+
+let leadSort = {col:"created_at", dir:-1}, subSort = {col:"created_at", dir:-1};
+
+function sortRows(rows, s){
+  return [...rows].sort((a,b)=>{
+    const x = a[s.col] ?? "", y = b[s.col] ?? "";
+    if(s.col === "created_at") return (new Date(x) - new Date(y)) * s.dir;
+    return String(x).localeCompare(String(y)) * s.dir;
+  });
+}
+function th(label, col, state, tableKey){
+  const active = state.col === col;
+  return `<th><button data-sort="${col}" data-table="${tableKey}">${esc(label)}` +
+         `<span aria-hidden="true">${active ? (state.dir === 1 ? "↑" : "↓") : ""}</span></button></th>`;
+}
+
+function renderLeads(){
+  const q = $("#leadSearch").value.trim().toLowerCase();
+  const rows = sortRows(DATA.leads.filter(l =>
+    !q || ["name","email","phone","message"].some(k => String(l[k]||"").toLowerCase().includes(q))), leadSort);
+  const wrap = $("#leadsWrap");
+  if(!DATA.leads.length){
+    wrap.innerHTML = empty("No leads yet", LIVE
+      ? "Contact-form submissions land here the moment someone sends one."
+      : "Not connected to a database, so there is nothing real to show. See SETUP-CRM.md.");
+    return;
+  }
+  if(!rows.length){ wrap.innerHTML = empty("No matches", "Try a different search."); return; }
+  wrap.innerHTML = `<table><thead><tr>
+      ${th("Received","created_at",leadSort,"lead")}
+      ${th("Name","name",leadSort,"lead")}
+      ${th("Email","email",leadSort,"lead")}
+      ${th("Phone","phone",leadSort,"lead")}
+      <th>Message</th></tr></thead><tbody>` +
+    rows.map(l=>`<tr>
+      <td><span class="when">${esc(when(l.created_at))}</span></td>
+      <td>${esc(l.name)||"—"}</td>
+      <td>${l.email ? `<a href="mailto:${esc(l.email)}">${esc(l.email)}</a>` : "—"}</td>
+      <td>${l.phone ? `<a href="tel:${esc(l.phone)}">${esc(l.phone)}</a>` : "—"}</td>
+      <td class="msg">${esc(l.message)||"—"}</td></tr>`).join("") + `</tbody></table>`;
+}
+
+function renderSubs(){
+  const q = $("#subSearch").value.trim().toLowerCase();
+  const rows = sortRows(DATA.subs.filter(s => !q || String(s.email||"").toLowerCase().includes(q)), subSort);
+  const wrap = $("#subsWrap");
+  if(!DATA.subs.length){
+    wrap.innerHTML = empty("No subscribers yet", LIVE
+      ? "Newsletter signups appear here."
+      : "Not connected to a database. See SETUP-CRM.md.");
+    return;
+  }
+  if(!rows.length){ wrap.innerHTML = empty("No matches", "Try a different search."); return; }
+  wrap.innerHTML = `<table><thead><tr>
+      ${th("Subscribed","created_at",subSort,"sub")}
+      ${th("Email","email",subSort,"sub")}</tr></thead><tbody>` +
+    rows.map(s=>`<tr><td><span class="when">${esc(when(s.created_at))}</span></td>
+      <td><a href="mailto:${esc(s.email)}">${esc(s.email)}</a></td></tr>`).join("") + `</tbody></table>`;
+}
+
+document.addEventListener("click", e=>{
+  const b = e.target.closest("[data-sort]"); if(!b) return;
+  const s = b.dataset.table === "lead" ? leadSort : subSort;
+  if(s.col === b.dataset.sort) s.dir *= -1; else { s.col = b.dataset.sort; s.dir = 1; }
+  b.dataset.table === "lead" ? renderLeads() : renderSubs();
+});
+
+function csv(rows, cols, name){
+  if(!rows.length) return;
+  const cell = v => `"${String(v==null?"":v).replace(/"/g,'""')}"`;
+  const body = [cols.join(","), ...rows.map(r => cols.map(c => cell(r[c])).join(","))].join("\r\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob(["﻿"+body], {type:"text/csv;charset=utf-8"}));
+  a.download = `${name}-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click(); URL.revokeObjectURL(a.href);
+}
+
+/* ── Render ────────────────────────────────────────────────── */
+function render(){
+  const chats = of("chat");
+  const answered = chats.filter(e => (e.meta||{}).answered);
+  const sessions = sessionCount();
+  const visits = perDay(of("session"), days || 0);
+
+  $("#kpis").innerHTML = [
+    kpi({ label:"Leads", value:nf.format(DATA.leads.length),
+          foot:`<span>${DATA.leads.length ? "from the contact form" : "none yet"}</span>` }),
+    kpi({ label:"Subscribers", value:nf.format(DATA.subs.length),
+          foot:`<span>${DATA.subs.length ? "newsletter signups" : "none yet"}</span>` }),
+    kpi({ label:"Sessions", value:nf.format(sessions),
+          foot:`<span>${days ? "last "+days+" days" : "all time"}</span>`,
+          spark: visits.map(v=>v.n) }),
+    kpi({ label:"Questions asked", value:nf.format(chats.length),
+          foot:`<span>${new Set(chats.map(c=>c.session)).size} ${new Set(chats.map(c=>c.session)).size===1?"visitor":"visitors"}</span>` }),
+    kpi({ label:"Answer rate", value: chats.length ? Math.round(answered.length/chats.length*100)+"%" : "—",
+          foot: chats.length
+            ? `<span>${chats.length - answered.length} unanswered</span>`
+            : `<span>no questions yet</span>` })
+  ].join("");
+
+  $("#visitsSub").textContent = days ? `Unique sessions per day, last ${days} days.` : "Unique sessions per day.";
+  lineChart($("#visitsChart"), visits);
+
+  $("#sources").innerHTML = meterList(tally(of("session"), e=>{
+    const r = (e.meta||{}).ref;
+    if(!r) return "Direct / typed in";
+    try{ return new URL(r).hostname.replace(/^www\./,""); }catch{ return "Other"; }
+  }, {unique:true}));
+
+  $("#devices").innerHTML = meterList(tally(of("session"), e=>{
+    const d = (e.meta||{}).device;
+    return d ? d[0].toUpperCase()+d.slice(1) : null;
+  }, {unique:true}));
+
+  $("#asked").innerHTML = barList(tally(chats, e => (e.label||"").toLowerCase().trim()), {max:12});
+
+  const gaps = tally(chats.filter(e => !(e.meta||{}).answered), e => (e.label||"").toLowerCase().trim());
+  $("#unanswered").innerHTML = gaps.length
+    ? barList(gaps, {max:12})
+    : empty(chats.length ? "Everything got an answer" : "Nothing asked yet",
+            chats.length ? "No unanswered questions in this period."
+                         : "Questions people ask the assistant show up here.");
+
+  $("#sections").innerHTML = barList(tally(of("section"), e=>e.label, {unique:true}), {max:10});
+  $("#nfts").innerHTML     = barList(tally(of("nft"), e=>e.label), {max:10});
+  $("#outbound").innerHTML = barList(tally(of("outbound"), e=>e.label), {max:10});
+
+  renderLeads(); renderSubs();
+}
+
+/* ── Banner: never let local numbers pass for real ones ────── */
+function banner(){
+  if(LIVE) return "";
+  return `<div class="note warn" style="margin-bottom:22px">
+    <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <path d="M12 9v4M12 17h.01M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+    <div><b>Preview mode — this is not your customer data.</b> No database is connected, so the only
+    thing shown is what <em>this browser</em> recorded while browsing the site. Real visitors are not
+    being captured anywhere yet. <code>SETUP-CRM.md</code> has the 5-minute setup that turns this into
+    a real CRM.</div></div>`;
+}
+
+/* ── Boot ──────────────────────────────────────────────────── */
+$("#range").addEventListener("click", e=>{
+  const b = e.target.closest("button[data-days]"); if(!b) return;
+  $$("#range button").forEach(x=>x.removeAttribute("aria-pressed"));
+  b.setAttribute("aria-pressed","true");
+  days = +b.dataset.days;
+  load().catch(showLoadError);
+});
+$("#reload").addEventListener("click", ()=>load().catch(showLoadError));
+$("#leadSearch").addEventListener("input", renderLeads);
+$("#subSearch").addEventListener("input", renderSubs);
+$("#leadCsv").addEventListener("click", ()=>csv(DATA.leads, ["created_at","name","email","phone","message"], "leads"));
+$("#subCsv").addEventListener("click", ()=>csv(DATA.subs, ["created_at","email"], "subscribers"));
+$("#signout").addEventListener("click", ()=>{
+  token = ""; sessionStorage.removeItem(TOKEN_KEY);
+  $("#app").hidden = true; $("#gate").hidden = false;
+});
+
+function showLoadError(err){
+  const hint = err.status === 401 || err.status === 403
+    ? "The signed-in account is not allowed to read these tables. Check the row-level security policies in SETUP-CRM.md."
+    : err.status === 404
+      ? "A table is missing. Run the SQL in SETUP-CRM.md."
+      : "Could not reach the database.";
+  $("#banner").innerHTML = `<div class="note warn" style="margin-bottom:22px">
+    <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <path d="M12 9v4M12 17h.01M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+    <div><b>Could not load data.</b> ${esc(hint)} <code>${esc(err.message)}</code></div></div>`;
+}
+
+function start(){
+  $("#gate").hidden = true; $("#app").hidden = false;
+  const badge = $("#connBadge");
+  badge.textContent = LIVE ? "Live" : "Preview — local only";
+  badge.className = "badge " + (LIVE ? "live" : "local");
+  $("#signout").hidden = !LIVE;
+  $("#banner").innerHTML = banner();
+  load().catch(showLoadError);
+}
+
+if(LIVE){
+  $("#gateForm").addEventListener("submit", async e=>{
+    e.preventDefault();
+    const btn = $("#gateBtn"), err = $("#gateErr");
+    err.textContent = ""; btn.disabled = true; btn.textContent = "Signing in…";
+    try{ await signIn($("#em").value.trim(), $("#pw").value); start(); }
+    catch(ex){ err.textContent = ex.message; }
+    finally{ btn.disabled = false; btn.textContent = "Sign in"; }
+  });
+  if(token) start();   // resume an existing session
+}else{
+  // Nothing to sign in to, and a password checked in client-side JavaScript would
+  // protect nothing. Preview mode shows only this browser's own local events.
+  $("#gateMsg").textContent = "No database is connected yet, so there is no account to sign in to and nothing confidential to protect. Continue to the preview.";
+  $("#gateForm").innerHTML = `<h1>Report Admin</h1>
+    <p>No database is connected yet, so there is no account to sign in to — and a password
+    checked in the browser would not protect anything anyway. The preview shows only the
+    events this browser recorded.</p>
+    <button class="btn btn-primary" id="previewBtn" type="button">Open the preview</button>`;
+  $("#previewBtn").addEventListener("click", start);
+}
+</script>
+</body>
+</html>

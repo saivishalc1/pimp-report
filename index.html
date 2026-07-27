@@ -1056,7 +1056,12 @@ const CFG = {
   //   "always" — always play the clips
   //   "never"  — posters everywhere
   motion: "auto",
-  // Point these at your backend once it's deployed.
+  // Supabase project URL + anon (public) key. Filling these in turns on lead
+  // capture and the admin dashboard at /admin.html. Paste the same pair into
+  // admin.html. Setup, including the row-level security that keeps customer
+  // data private, is in SETUP-CRM.md.
+  cloud: { url:"", key:"" },
+  // Legacy fallback: used for the forms only when `cloud` is empty.
   api: { chat: "/api/chat", lead: "/api/leads", subscribe: "/api/subscribe" }
 };
 const IPFS = "https://copper-urgent-mole-3.mypinata.cloud/ipfs/bafybeigogtkehmufthe533dftlbaozlzb2ref6ilbmtz7hdkywkpj3pjxy";
@@ -1392,6 +1397,7 @@ document.addEventListener("click",e=>{
   const n = NFTS[+card.dataset.idx];
   if(n.link.startsWith("#")){ location.hash = n.link; return; }
   lastFocus = card;
+  track("nft", (n.id!=="—" ? "TPR "+n.id+" — " : "")+n.title, {status:n.status});
   // The artwork is the point of the modal and the user asked for it, so this is
   // the one place a phone will fetch a clip — and load it now, not on scroll.
   $("#modalMedia").innerHTML = mediaTag(n, true);
@@ -1505,8 +1511,131 @@ if(heroEl && CLIPS_OK){
 upgradeArtwork();
 lazyVideos();
 
+/* ═══════════════════════════════════════════════════════════
+   ANALYTICS
+   Feeds the admin dashboard at /admin.html. Writes to Supabase when
+   CFG.cloud is filled in; otherwise events stay in this browser so the
+   dashboard has something real to preview. No cookies, no third-party
+   calls, no cross-site identifier — the session id is random and dies
+   with the tab.
+   ═══════════════════════════════════════════════════════════ */
+const CLOUD = (CFG.cloud && CFG.cloud.url && CFG.cloud.key) ? CFG.cloud : null;
+
+const SESSION = (()=>{
+  try{
+    let s = sessionStorage.getItem("tpr_sid");
+    if(!s){
+      s = (crypto.randomUUID ? crypto.randomUUID()
+                             : Date.now().toString(36)+Math.random().toString(36).slice(2));
+      sessionStorage.setItem("tpr_sid", s);
+    }
+    return s;
+  }catch{ return "anon"; }
+})();
+
+/* Buffered in memory and written once, deferred. Parsing and re-serialising the
+   whole store on every event is fine at 20 rows and not fine at 500, and it
+   would land on the load path — a returning visitor would pay more each visit. */
+const pending = Object.create(null);
+let persistTimer = null;
+function keep(key, row, cap){
+  (pending[key] = pending[key] || {cap, rows:[]}).rows.push(row);
+  clearTimeout(persistTimer);
+  persistTimer = setTimeout(persist, 500);
+}
+function persist(){
+  clearTimeout(persistTimer);
+  for(const key in pending){
+    const {cap, rows} = pending[key];
+    delete pending[key];
+    try{
+      const a = JSON.parse(localStorage.getItem(key) || "[]").concat(rows);
+      localStorage.setItem(key, JSON.stringify(a.slice(-cap)));
+    }catch{}   // private mode / quota — analytics must never break the page
+  }
+}
+addEventListener("pagehide", persist);
+addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="hidden") persist(); });
+
+let sendQ = [], sendTimer = null;
+function track(kind, label, meta){
+  const row = { session:SESSION, kind, label:String(label==null?"":label).slice(0,300),
+                meta:meta||{}, created_at:new Date().toISOString() };
+  keep("tpr_events", row, 500);
+  if(!CLOUD) return;
+  sendQ.push(row);
+  clearTimeout(sendTimer);
+  sendTimer = setTimeout(flushEvents, 1500);   // batch, so typing doesn't spray requests
+}
+async function flushEvents(){
+  if(!CLOUD || !sendQ.length) return;
+  const batch = sendQ; sendQ = [];
+  try{
+    const r = await fetch(CLOUD.url.replace(/\/$/,"")+"/rest/v1/events",{
+      method:"POST", keepalive:true,
+      headers:{ "Content-Type":"application/json", apikey:CLOUD.key,
+                Authorization:"Bearer "+CLOUD.key, Prefer:"return=minimal" },
+      body: JSON.stringify(batch)
+    });
+    if(!r.ok) throw 0;
+  }catch{ sendQ = batch.concat(sendQ); }   // hold them for the next flush
+}
+addEventListener("pagehide", flushEvents);
+addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="hidden") flushEvents(); });
+
+track("session","start",{
+  ref: (document.referrer||"").slice(0,200),
+  device: mq("(max-width:820px)") ? "mobile" : mq("(max-width:1100px)") ? "tablet" : "desktop",
+  vw: innerWidth,
+  utm: new URLSearchParams(location.search).get("utm_source") || ""
+});
+
+// Which sections actually get read.
+if("IntersectionObserver" in window){
+  const seen = new Set();
+  const secIO = new IntersectionObserver(es=>es.forEach(e=>{
+    if(!e.isIntersecting) return;
+    const h = e.target.querySelector("h2");
+    // Heading first: the dashboard reads better with "Tradable NFTs" than "nfts".
+    const label = ((h ? h.textContent : "") || e.target.id || "").trim().slice(0,60);
+    if(!label || seen.has(label)) return;
+    seen.add(label); track("section", label);
+  }),{threshold:.35});
+  $$("#view-home .sec").forEach(s=>secIO.observe(s));
+}
+
+// Where people go next — the closest thing to an intent signal on a static site.
+document.addEventListener("click", e=>{
+  const a = e.target.closest('a[href^="http"], a[href^="tel:"], a[href^="mailto:"]');
+  if(!a) return;
+  const href = a.getAttribute("href") || "";
+  let label = "other";
+  try{
+    label = href.startsWith("tel:") ? "phone call"
+          : href.startsWith("mailto:") ? "email"
+          : new URL(href, location.href).hostname.replace(/^www\./,"");
+  }catch{}
+  track("outbound", label, {href:href.slice(0,200)});
+}, true);
+
 /* ── Forms ── */
-function wireForm(formId,msgId,endpoint,okText){
+async function postRecord(table, endpoint, data){
+  if(CLOUD){
+    const r = await fetch(CLOUD.url.replace(/\/$/,"")+"/rest/v1/"+table,{
+      method:"POST",
+      headers:{ "Content-Type":"application/json", apikey:CLOUD.key,
+                Authorization:"Bearer "+CLOUD.key, Prefer:"return=minimal" },
+      body: JSON.stringify([data])
+    });
+    if(!r.ok) throw new Error("cloud "+r.status);
+    return;
+  }
+  const r = await fetch(endpoint,{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(data)});
+  if(!r.ok) throw new Error("endpoint "+r.status);
+}
+
+function wireForm(formId,msgId,table,endpoint,localKey,okText){
   const form=$(formId), msg=$(msgId);
   form.addEventListener("submit",async e=>{
     e.preventDefault();
@@ -1514,18 +1643,24 @@ function wireForm(formId,msgId,endpoint,okText){
     if(!form.checkValidity()){ msg.className="form-msg err show"; msg.textContent="Check the highlighted fields and try again."; form.reportValidity(); return; }
     const btn=form.querySelector("button[type=submit]"); const label=btn.textContent;
     btn.disabled=true; btn.textContent="Sending…";
+    const row = {...data, created_at:new Date().toISOString()};
     try{
-      const r=await fetch(endpoint,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(data)});
-      if(!r.ok) throw 0;
+      await postRecord(table, endpoint, data);
+      keep(localKey, row, 400);
+      track("form", table);
       msg.className="form-msg ok show"; msg.textContent=okText; form.reset();
     }catch{
+      // Keep it locally regardless, so nothing typed is silently thrown away
+      // and the dashboard preview can show it.
+      keep(localKey, row, 400);
+      track("form", table+" (not stored)");
       msg.className="form-msg err show";
       msg.textContent="The form isn't connected to a backend yet. Reach us directly at 832-658-0929 in the meantime.";
     }finally{ btn.disabled=false; btn.textContent=label; }
   });
 }
-wireForm("#subForm","#subMsg",CFG.api.subscribe,"You're on the list. Watch your inbox.");
-wireForm("#contactForm","#contactMsg",CFG.api.lead,"Message received. We'll get back to you shortly.");
+wireForm("#subForm","#subMsg","subscribers",CFG.api.subscribe,"tpr_subs","You're on the list. Watch your inbox.");
+wireForm("#contactForm","#contactMsg","leads",CFG.api.lead,"tpr_leads","Message received. We'll get back to you shortly.");
 
 /* ═══════════════════════════════════════════════════════════
    ASSISTANT
@@ -1555,7 +1690,10 @@ const CONCEPTS = [
 /* ── Retrieval index, built from this page ──
    Sections, PMAs, NFTs and videos each become a passage. Built lazily on first
    use so it never lands on the load path. */
-const STOP = new Set(("a about an and any are as at be been but by can could did do does for from get got had has have how i if in into is it its me my no not of on or our so than that the their them then there these they this to was we were what when where which who whom why will with would you your").split(" "));
+/* Stopwords include conversational filler ("tell", "explain", "much"), because the
+   answerability test below keys off which content words matched — filler carrying
+   idf weight would make every phrased question look under-matched. */
+const STOP = new Set(("a about after an and any anything are as at be been before but by can come comes could did do does else explain for from get give got had has have help how i if in into is it its just know like made make many matter matters me mean means more most much my need no not of on one or our please really say said should show so some something tell than that the their them then there these they thing things this to told want was we were what when where which who whom why will with work works would you your").split(" "));
 
 /* Domain vocabulary, so "how much" reaches the price and "buy" reaches Rarible. */
 const SYN = {
@@ -1616,6 +1754,12 @@ function buildCorpus(){
     + minted.map(n=>`TPR ${n.id} ${n.title}`).join(", ")
     + `. Announced but not yet minted: ` + soon.map(n=>`TPR ${n.id} ${n.title}`).join(", ")
     + `. The current drop is Series 2.01, US Real Estate Market 2025-2028: 10 NFTs at 22 ETH each, listed on Rarible.`, "#nfts");
+  add("Which sectors the PMAs cover",
+    "The sectors covered are equities and real estate, energy — oil, gas, renewables and EV storage — "
+    + "and bond markets, focused on Treasuries and mortgage-backed debt. Two analytical lenses run across "
+    + "all of them: socio-political economics, and monetary analysis, which is global rather than USD-only "
+    + "and includes cryptocurrencies. In the collection that maps to US real estate, US equities, "
+    + "global energy and US Treasuries.", "#pmas", 1.25);
   add("How the PMAs are verified",
     "Every PMA is dated on completion, and that date is the whole point: the analysis can then be held up "
     + "against reporting from Bloomberg, the Financial Times, CNBC and others on the same subject. "
@@ -1670,9 +1814,30 @@ function search(q, k=3){
     return {d, s: s * (d.kind === "video" && wantVideo ? 1.15 : d.w)};
   }).filter(x => x.s > 0).sort((a,b) => b.s - a.s);
   if(!scored.length) return [];
+
   const top = scored[0].s;
   // Only keep passages competitive with the best, so answers stay tight.
-  return scored.filter(x => x.s >= Math.max(top*.45, .8)).slice(0,k).map(x => x.d);
+  const hits = scored.filter(x => x.s >= Math.max(top*.45, .8)).slice(0,k).map(x => x.d);
+
+  /* Answerability. Raw score can't separate a real question from an off-topic one
+     — "do you offer refunds" outscored "what is a pma", because it matched the
+     common word "offer" in "special offers" while the word that actually
+     mattered, "refunds", appears nowhere. So weigh how much of the query's
+     *distinctive* vocabulary the answer accounts for: idf mass of matched terms
+     over idf mass of all of them, with absent words costing the most. Measured
+     across the whole returned set, since that is what the reader gets — scoring
+     it against the top passage alone rejected "which sectors do you cover",
+     where "sector" and "cover" sit in different passages. Below half we say we
+     don't know, which is also what lands the question on the dashboard's
+     content-gap list. */
+  const idfOf = w => { const df = C.df[w] || 0; return Math.log(1 + (C.N - df + .5)/(df + .5)); };
+  let matched = 0, total = 0;
+  new Set(qt).forEach(w => {
+    const i = idfOf(w); total += i;
+    if(hits.some(d => d.tf[w])) matched += i;
+  });
+  if(total > 0 && matched/total < .5) return [];
+  return hits;
 }
 
 /* Questions that deserve a computed answer rather than a retrieved passage. */
@@ -1807,16 +1972,20 @@ async function respond(q){
 
   const direct = directAnswer(q);
   if(direct){
+    // Logged for the admin dashboard: what gets asked, and what we failed to answer.
+    track("chat", q, {answered:true, mode:"computed"});
     await streamIn(el, direct.c);
     el.innerHTML += cited(direct.src ? [direct.src] : []);
   }else{
     const hits = search(q);
     if(hits.length){
+      track("chat", q, {answered:true, mode:"retrieved", top:hits[0].t});
       await streamIn(el, hits.map(h=>h.c).join("\n\n"));
       // One link per section, in case several passages share a source.
       const seen = new Set();
       el.innerHTML += cited(hits.filter(h => !seen.has(h.src) && seen.add(h.src)));
     }else{
+      track("chat", q, {answered:false, mode:"nomatch"});
       await streamIn(el,
         "I couldn't find that on the site. I can cover the PMAs and the sectors they analyse, "
         + "any piece in the NFT collection, the current drop and pricing, how ERC-721 and DeFi work, "
