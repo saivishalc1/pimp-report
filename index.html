@@ -774,8 +774,11 @@ p{margin:0 0 1.05em}
         <a class="btn btn-ghost" href="#nfts" style="margin-top:20px">Our portfolio <span class="arw">→</span></a>
       </div>
       <figure class="about-fig rv" style="margin:0">
-        <video data-src="assets/media/about.mp4" poster="assets/media/about-poster.jpg"
-               muted loop playsinline preload="none" aria-label="The P.I.M.P. Report artwork"></video>
+        <!-- Ships as a lazy image; JS upgrades it to video only where clips are
+             allowed. A <video poster> would fetch the poster eagerly even on a
+             phone that never plays the clip. -->
+        <img src="assets/media/about-poster.jpg" width="640" height="346" loading="lazy"
+             decoding="async" data-vid="assets/media/about.mp4" alt="The P.I.M.P. Report artwork">
       </figure>
     </div>
 
@@ -795,8 +798,9 @@ p{margin:0 0 1.05em}
     </div>
     <article class="drop rv">
       <div class="drop-img">
-        <video data-src="assets/media/drop.mp4" poster="assets/media/drop-poster.jpg"
-               muted loop playsinline preload="none" aria-label="Series 2.01 artwork — US Real Estate Market 2025–2028"></video>
+        <img src="assets/media/drop-poster.jpg" width="400" height="400" loading="lazy"
+             decoding="async" data-vid="assets/media/drop.mp4"
+             alt="Series 2.01 artwork — US Real Estate Market 2025–2028">
       </div>
       <div class="drop-body">
         <span class="stamp"><i class="dot"></i>Series 2.01 · Limited</span>
@@ -910,8 +914,8 @@ p{margin:0 0 1.05em}
 <div class="view" id="view-videos">
   <section class="hero hero-page">
     <div class="hero-media" aria-hidden="true">
-      <video data-src="assets/media/vidhero.mp4" poster="assets/media/vidhero-poster.jpg"
-             muted loop playsinline preload="none"></video>
+      <img src="assets/media/vidhero-poster.jpg" width="300" height="534" loading="lazy"
+           decoding="async" data-vid="assets/media/vidhero.mp4" alt="">
     </div>
     <div class="hero-sweep" aria-hidden="true"></div>
     <div class="hero-in wrap">
@@ -1211,6 +1215,21 @@ const videoIO = ("IntersectionObserver" in window)
       });
     },{rootMargin:"200px"})
   : null;
+/* Swap the decorative lazy <img> placeholders for real <video> elements. Only
+   runs when the clip budget allows; otherwise the images simply stay. */
+function upgradeArtwork(){
+  if(!CLIPS_OK) return;
+  $$("img[data-vid]").forEach(img=>{
+    const v = document.createElement("video");
+    v.muted = true; v.loop = true; v.preload = "none";
+    v.setAttribute("playsinline","");
+    v.poster = img.getAttribute("src");
+    v.dataset.src = img.dataset.vid;
+    if(img.alt) v.setAttribute("aria-label", img.alt);
+    img.replaceWith(v);
+  });
+}
+
 function lazyVideos(){
   if(!CLIPS_OK) return;   // posters already stand in; nothing to fetch
   $$("video[data-src]:not([data-hero])").forEach(v=>{
@@ -1483,6 +1502,7 @@ if(heroEl && CLIPS_OK){
   else addEventListener("load",startHero,{once:true});
 }
 
+upgradeArtwork();
 lazyVideos();
 
 /* ── Forms ── */
