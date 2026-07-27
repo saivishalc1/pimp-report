@@ -182,6 +182,11 @@ td a:hover{text-decoration:underline}
   background:var(--surface-2);font-size:16px}
 .field input:focus{outline:none;border-color:rgba(255,74,61,.55)}
 .gate .btn{width:100%;margin-top:8px}
+.gate-hint{margin-top:16px;padding:13px 15px;border-radius:12px;font-size:.8rem;line-height:1.55;
+  border:1px solid rgba(250,178,25,.35);background:rgba(250,178,25,.06);color:var(--muted)}
+.gate-hint b{color:var(--warn)}
+.gate-hint code{font-family:var(--f-mono);font-size:.92em;color:var(--text);
+  background:rgba(255,255,255,.1);padding:2px 6px;border-radius:4px}
 .err{color:#ff8b80;font-size:.85rem;margin-top:12px;min-height:1.2em}
 [hidden]{display:none!important}
 
@@ -223,6 +228,7 @@ td a:hover{text-decoration:underline}
     </div>
     <button class="btn btn-primary" type="submit" id="gateBtn">Sign in</button>
     <p class="err" id="gateErr" role="status"></p>
+    <div class="gate-hint" id="gateHint" hidden></div>
     <p style="margin:18px 0 0;text-align:center;font-size:.82rem">
       <a href="./" style="color:var(--muted)">← Back to the site</a></p>
   </form>
@@ -332,6 +338,16 @@ td a:hover{text-decoration:underline}
    but it is not your real customer data. See SETUP-CRM.md.
    ═══════════════════════════════════════════════════════════ */
 const CLOUD = { url:"", key:"" };
+
+/* ── Demo sign-in ──
+   Used only while no database is connected. This is NOT security: the check
+   runs in the browser and these credentials sit in this file, readable by
+   anyone who views source. It exists so the sign-in flow works today, and it
+   guards nothing — preview mode has nothing to guard but this browser's own
+   events. Filling in CLOUD above replaces it with real Supabase authentication
+   and this path stops running entirely. */
+const DEMO = { user:"admin", pass:"report2026" };
+const DEMO_KEY = "tpr_demo_session";
 
 const $  = (s,r=document)=>r.querySelector(s);
 const $$ = (s,r=document)=>[...r.querySelectorAll(s)];
@@ -687,7 +703,10 @@ $("#subSearch").addEventListener("input", renderSubs);
 $("#leadCsv").addEventListener("click", ()=>csv(DATA.leads, ["created_at","name","email","phone","message"], "leads"));
 $("#subCsv").addEventListener("click", ()=>csv(DATA.subs, ["created_at","email"], "subscribers"));
 $("#signout").addEventListener("click", ()=>{
-  token = ""; sessionStorage.removeItem(TOKEN_KEY);
+  token = "";
+  sessionStorage.removeItem(TOKEN_KEY);
+  sessionStorage.removeItem(DEMO_KEY);
+  $("#pw").value = ""; $("#gateErr").textContent = "";
   $("#app").hidden = true; $("#gate").hidden = false;
 });
 
@@ -706,36 +725,50 @@ function showLoadError(err){
 function start(){
   $("#gate").hidden = true; $("#app").hidden = false;
   const badge = $("#connBadge");
-  badge.textContent = LIVE ? "Live" : "Preview — local only";
+  badge.textContent = LIVE ? "Live" : "Demo — local only";
   badge.className = "badge " + (LIVE ? "live" : "local");
-  $("#signout").hidden = !LIVE;
+  $("#signout").hidden = false;          // both modes can sign out
   $("#banner").innerHTML = banner();
   load().catch(showLoadError);
 }
 
-if(LIVE){
-  $("#gateForm").addEventListener("submit", async e=>{
-    e.preventDefault();
-    const btn = $("#gateBtn"), err = $("#gateErr");
-    err.textContent = ""; btn.disabled = true; btn.textContent = "Signing in…";
-    try{ await signIn($("#em").value.trim(), $("#pw").value); start(); }
-    catch(ex){ err.textContent = ex.message; }
-    finally{ btn.disabled = false; btn.textContent = "Sign in"; }
-  });
-  if(token) start();   // resume an existing session
-}else{
-  // Nothing to sign in to, and a password checked in client-side JavaScript would
-  // protect nothing. Preview mode shows only this browser's own local events.
-  $("#gateMsg").textContent = "No database is connected yet, so there is no account to sign in to and nothing confidential to protect. Continue to the preview.";
-  $("#gateForm").innerHTML = `<h1>Report Admin</h1>
-    <p>No database is connected yet, so there is no account to sign in to — and a password
-    checked in the browser would not protect anything anyway. The preview shows only the
-    events this browser recorded.</p>
-    <button class="btn btn-primary" id="previewBtn" type="button">Open the preview</button>
-    <p style="margin:18px 0 0;text-align:center;font-size:.82rem">
-      <a href="./" style="color:var(--muted)">← Back to the site</a></p>`;
-  $("#previewBtn").addEventListener("click", start);
+/* One sign-in flow, two checks behind it: real Supabase auth once CLOUD is
+   filled in, the demo credentials until then. */
+$("#gateForm").addEventListener("submit", async e=>{
+  e.preventDefault();
+  const btn = $("#gateBtn"), err = $("#gateErr");
+  const id = $("#em").value.trim(), pw = $("#pw").value;
+  err.textContent = ""; btn.disabled = true; btn.textContent = "Signing in…";
+  try{
+    if(LIVE){
+      await signIn(id, pw);
+    }else{
+      await new Promise(r=>setTimeout(r, 280));   // match the feel of a real round trip
+      if(id.toLowerCase() !== DEMO.user || pw !== DEMO.pass)
+        throw new Error("Wrong username or password.");
+      sessionStorage.setItem(DEMO_KEY, "1");
+    }
+    start();
+  }catch(ex){ err.textContent = ex.message; }
+  finally{ btn.disabled = false; btn.textContent = "Sign in"; }
+});
+
+if(!LIVE){
+  // "admin" is not an email address, so the field must not validate as one.
+  $("#em").type = "text";
+  $("#em").setAttribute("autocomplete","off");
+  $('label[for="em"]').textContent = "Username";
+  $("#gateMsg").innerHTML = "Sign in to see leads, traffic and what people are asking the assistant.";
+  $("#gateHint").innerHTML =
+    `<b>Demo login</b> — username <code>${esc(DEMO.user)}</code>, password <code>${esc(DEMO.pass)}</code>.<br>
+     Shown here because it is in this page's source either way. It is a demonstration of the
+     sign-in flow, not protection — and there is nothing to protect yet, since no database is
+     connected. Connecting one swaps this for a real login.`;
+  $("#gateHint").hidden = false;
 }
+
+// Resume an existing session.
+if(LIVE ? token : sessionStorage.getItem(DEMO_KEY)) start();
 </script>
 </body>
 </html>
