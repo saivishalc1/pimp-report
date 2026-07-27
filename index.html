@@ -20,9 +20,6 @@
 <meta name="twitter:description" content="Tradable Predictive Market Analyses. Dated on completion. Always pre-dated.">
 <meta name="twitter:image" content="https://thepimpreport.com/assets/media/hero-poster.jpg">
 
-<!-- Only third party left is the IPFS gateway, which still serves the 28 video
-     thumbnails on the portfolio view. -->
-<link rel="preconnect" href="https://copper-urgent-mole-3.mypinata.cloud" crossorigin>
 <link rel="preload" as="image" href="assets/media/hero-poster.jpg" fetchpriority="high">
 <!-- Fonts are self-hosted (see @font-face below), so they start downloading with
      the document instead of waiting on a stylesheet from a third-party origin.
@@ -1135,36 +1132,36 @@ const VERIFIERS = ["Bloomberg","Financial Times","CNBC","World Economic Forum","
 
 /* Videos — `cat` values: "2025" | "2023" | "market".
    Edit these freely; the filters read straight off this array. */
-const V = IPFS + "/img/TPR.NFT/VideoThumbnails/";
+const V = "assets/thumbs/";   // self-hosted: the gateway served these at ~1.45s each
 const VIDEOS = [
-  { t:"TPR NFT Promo", d:"The US Real Estate Market is going to be CRAAAAZZZY!!!", img:V+"tprpromo.jpg", yt:"VB3tAhxJQNM", cat:"2025" },
-  { t:"They Still Hiking Rates, Y'all!!!", d:"Don't think they STOPPIN rate hikes just yet!", img:V+"tshry.jpg", yt:"FXErnF43Ax4", cat:"2025" },
-  { t:"BlackRock Confession???", d:"Did BlackRock confess that central banks are DELIBERATELY creating recessions?", img:V+"BC.jpg", yt:"vpPN7xd3rKY", cat:"2025" },
-  { t:"Capital Flying into the Shadows 2.0", d:"Is history REPEATING itself?", img:V+"CFIS2.jpg", yt:"xf80-4hzIsw", cat:"2025" },
-  { t:"TPR NFT SERIES 1.01 PROMO", d:"Get THIS NFT, & make HISTORY!", img:V+"tprp.jpg", yt:"Wi03FanoQIk", cat:"2023" },
-  { t:"Dey Ain't Stoppin…", d:"The Fed is continuing its rate hiking trajectory.", img:V+"deyaintstoppin.jpg", yt:"J5y2Uf_cddk", cat:"2023" },
-  { t:"IMF Calls for More Regulations on African Cryptocurrency Markets", d:"The IMF seeks to weaponise regulations against African crypto-economies.", img:V+"imfregs.jpg", yt:"qNJ7g-1IF4w", cat:"2023" },
-  { t:"Dey Dink Dey Slick", d:"The Feds are running game on bank depositors, and they don't even know it.", img:V+"ddds.jpg", yt:"IFO2-aLgyhA", cat:"2023" },
-  { t:"The IMF told the Feds WHAT????", d:"Is the IMF giving ORDERS to the Fed? Will the Fed OBEY?", img:V+"imffed.jpg", yt:"MfPna1JEYpg", cat:"2023" },
-  { t:"KING DOLLAR RISES AGAIN!!!", d:"Strengthening dollar + rising interest rates means LESS REVENUE with INCREASING DEBTS.", img:V+"KingDollarReturns.jpg", yt:"zDlP3LB4e2c", cat:"2023" },
-  { t:"Fed still tryna RAISE RATES", d:"Fed's Mester said the Feds are not at a point where they can \"hold\" rates.", img:V+"Monster.jpg", yt:"fCpVoQciiRc", cat:"2023" },
-  { t:"Six Since…", d:"With the Feds holding at 5.50% as of Feb 6, 2024, I still believe it will keep hiking until it reaches 5.75%–6%.", img:V+"6Since.jpg", yt:"VcwhsFXUq9E", cat:"2023" },
-  { t:"Predicted the Purpose of the Ukrainian Coup back in 2014", d:"I predicted that the PURPOSE of the Ukrainian coup was to help the US REPLACE Russian gas with US LNG.", img:V+"Ukraine.jpg", yt:"1YQSDAe4u7Y", cat:"2023" },
-  { t:"The Root of Banking Crises is Liquidity Drainage", d:"This point MUST BE UNDERSTOOD.", img:V+"ld.jpg", yt:"2o7KgtSiZPE", cat:"2023" },
-  { t:"Accurate and Precise Market Predictability is REAL", d:"A new milestone in our 19+ year DOCUMENTED HISTORY of accurately predicting the markets with precision.", img:V+"ACC.jpg", yt:"mJcY1-uIeSY", cat:"2023" },
-  { t:"Janet Yellen Warns that Treasury May Run Out of Cash by June (2023)", d:"A new milestone in our 19+ year DOCUMENTED HISTORY of accurately predicting the markets with precision.", img:V+"JY.jpeg", yt:"1Ia3VWowjMI", cat:"2023" },
-  { t:"WEF just QUOTED BigPimpin504!!!", d:"The World Economic Forum explained the EXACT reasons why US banks are FAILING.", img:V+"WEF.jpg", yt:"BeNe4aB0TtM", cat:"2023" },
-  { t:"They're trying to BAN BIGPIMPIN504!!!", d:"MSSM has been SHADOWBANNING me for getting it right in REAL TIME — live on social media!", img:V+"shadowban.jpg", yt:"f-V2Zn31dT8", cat:"2023" },
-  { t:"Bank of America said WH@T???", d:"Even BOA AGREES with Bigpimpin504!", img:V+"BOA.jpg", yt:"c5tpWhn2Km8", cat:"2023" },
-  { t:"The Feds are Making their Case for Unprecedented Higher Fed Fund Rate Hikes", d:"They're PREPPING the PUBLIC on their rate hike plans.", img:V+"fedrev.jpg", yt:"g4McaisPnwM", cat:"2023" },
-  { t:"Cracking the Liquidity Code", d:"The MSM and the Fed keep talking about inflation when we're ACTUALLY in a deflationary period.", img:V+"ctc.jpg", yt:"W-V76tETsbU", cat:"2023" },
-  { t:"Twice the Tools — Double the Impact", d:"TWO TOOLS used to drain liquidity and hike rates.", img:V+"2t.jpg", yt:"uI8DN7StTjE", cat:"2023" },
-  { t:"Financial Times just VERIFIED my PMA on Rate Hikes", d:"FT, like other financial news networks, VERIFIES The P.I.M.P. Report. We ALWAYS pre-date them.", img:V+"fta.jpg", yt:"dEFUiHZhhj4", cat:"2023" },
-  { t:"Bloomberg Verifying PMA on Deflation", d:"Bloomberg, like other financial news networks, VERIFIES The P.I.M.P. Report. We ALWAYS pre-date them.", img:V+"b1.jpg", yt:"eaVz3ssRLyU", cat:"2023" },
-  { t:"Bloomberg Verifying my PMA Again!!!", d:"Bloomberg VERIFIES The P.I.M.P. Report AGAIN. We ALWAYS pre-date them.", img:V+"b2.jpg", yt:"g8wIYRZGhDM", cat:"2023" },
-  { t:"F*Fair! Play to Win!!!", d:"Make things MORE FAVORABLE for yourselves, and LESS FAVORABLE for others.", img:V+"ff.jpg", yt:"_Ql0e9lPU6k", cat:"2023" },
-  { t:"Regulations are USED to KNOCK OUT Competition — NOT to Make the Markets Fair", d:"Regulations are EXPOSED for their TRUE INTENTIONS.", img:V+"cr.jpg", yt:"PyGRvc52PIU", cat:"2023" },
-  { t:"Rarible NFT Marketplace", d:"Get exclusive access to the world's first tradable Predictive Market Analyses (PMAs).", img:"https://rarible.com/public/cf603e3d281a08bcb656.png", link:"https://rarible.com/tpr2-1/items", cat:"market" }
+  { t:"TPR NFT Promo", d:"The US Real Estate Market is going to be CRAAAAZZZY!!!", img:V+"tprpromo.webp", yt:"VB3tAhxJQNM", cat:"2025" },
+  { t:"They Still Hiking Rates, Y'all!!!", d:"Don't think they STOPPIN rate hikes just yet!", img:V+"tshry.webp", yt:"FXErnF43Ax4", cat:"2025" },
+  { t:"BlackRock Confession???", d:"Did BlackRock confess that central banks are DELIBERATELY creating recessions?", img:V+"BC.webp", yt:"vpPN7xd3rKY", cat:"2025" },
+  { t:"Capital Flying into the Shadows 2.0", d:"Is history REPEATING itself?", img:V+"CFIS2.webp", yt:"xf80-4hzIsw", cat:"2025" },
+  { t:"TPR NFT SERIES 1.01 PROMO", d:"Get THIS NFT, & make HISTORY!", img:V+"tprp.webp", yt:"Wi03FanoQIk", cat:"2023" },
+  { t:"Dey Ain't Stoppin…", d:"The Fed is continuing its rate hiking trajectory.", img:V+"deyaintstoppin.webp", yt:"J5y2Uf_cddk", cat:"2023" },
+  { t:"IMF Calls for More Regulations on African Cryptocurrency Markets", d:"The IMF seeks to weaponise regulations against African crypto-economies.", img:V+"imfregs.webp", yt:"qNJ7g-1IF4w", cat:"2023" },
+  { t:"Dey Dink Dey Slick", d:"The Feds are running game on bank depositors, and they don't even know it.", img:V+"ddds.webp", yt:"IFO2-aLgyhA", cat:"2023" },
+  { t:"The IMF told the Feds WHAT????", d:"Is the IMF giving ORDERS to the Fed? Will the Fed OBEY?", img:V+"imffed.webp", yt:"MfPna1JEYpg", cat:"2023" },
+  { t:"KING DOLLAR RISES AGAIN!!!", d:"Strengthening dollar + rising interest rates means LESS REVENUE with INCREASING DEBTS.", img:V+"KingDollarReturns.webp", yt:"zDlP3LB4e2c", cat:"2023" },
+  { t:"Fed still tryna RAISE RATES", d:"Fed's Mester said the Feds are not at a point where they can \"hold\" rates.", img:V+"Monster.webp", yt:"fCpVoQciiRc", cat:"2023" },
+  { t:"Six Since…", d:"With the Feds holding at 5.50% as of Feb 6, 2024, I still believe it will keep hiking until it reaches 5.75%–6%.", img:V+"6Since.webp", yt:"VcwhsFXUq9E", cat:"2023" },
+  { t:"Predicted the Purpose of the Ukrainian Coup back in 2014", d:"I predicted that the PURPOSE of the Ukrainian coup was to help the US REPLACE Russian gas with US LNG.", img:V+"Ukraine.webp", yt:"1YQSDAe4u7Y", cat:"2023" },
+  { t:"The Root of Banking Crises is Liquidity Drainage", d:"This point MUST BE UNDERSTOOD.", img:V+"ld.webp", yt:"2o7KgtSiZPE", cat:"2023" },
+  { t:"Accurate and Precise Market Predictability is REAL", d:"A new milestone in our 19+ year DOCUMENTED HISTORY of accurately predicting the markets with precision.", img:V+"ACC.webp", yt:"mJcY1-uIeSY", cat:"2023" },
+  { t:"Janet Yellen Warns that Treasury May Run Out of Cash by June (2023)", d:"A new milestone in our 19+ year DOCUMENTED HISTORY of accurately predicting the markets with precision.", img:V+"JY.webp", yt:"1Ia3VWowjMI", cat:"2023" },
+  { t:"WEF just QUOTED BigPimpin504!!!", d:"The World Economic Forum explained the EXACT reasons why US banks are FAILING.", img:V+"WEF.webp", yt:"BeNe4aB0TtM", cat:"2023" },
+  { t:"They're trying to BAN BIGPIMPIN504!!!", d:"MSSM has been SHADOWBANNING me for getting it right in REAL TIME — live on social media!", img:V+"shadowban.webp", yt:"f-V2Zn31dT8", cat:"2023" },
+  { t:"Bank of America said WH@T???", d:"Even BOA AGREES with Bigpimpin504!", img:V+"BOA.webp", yt:"c5tpWhn2Km8", cat:"2023" },
+  { t:"The Feds are Making their Case for Unprecedented Higher Fed Fund Rate Hikes", d:"They're PREPPING the PUBLIC on their rate hike plans.", img:V+"fedrev.webp", yt:"g4McaisPnwM", cat:"2023" },
+  { t:"Cracking the Liquidity Code", d:"The MSM and the Fed keep talking about inflation when we're ACTUALLY in a deflationary period.", img:V+"ctc.webp", yt:"W-V76tETsbU", cat:"2023" },
+  { t:"Twice the Tools — Double the Impact", d:"TWO TOOLS used to drain liquidity and hike rates.", img:V+"2t.webp", yt:"uI8DN7StTjE", cat:"2023" },
+  { t:"Financial Times just VERIFIED my PMA on Rate Hikes", d:"FT, like other financial news networks, VERIFIES The P.I.M.P. Report. We ALWAYS pre-date them.", img:V+"fta.webp", yt:"dEFUiHZhhj4", cat:"2023" },
+  { t:"Bloomberg Verifying PMA on Deflation", d:"Bloomberg, like other financial news networks, VERIFIES The P.I.M.P. Report. We ALWAYS pre-date them.", img:V+"b1.webp", yt:"eaVz3ssRLyU", cat:"2023" },
+  { t:"Bloomberg Verifying my PMA Again!!!", d:"Bloomberg VERIFIES The P.I.M.P. Report AGAIN. We ALWAYS pre-date them.", img:V+"b2.webp", yt:"g8wIYRZGhDM", cat:"2023" },
+  { t:"F*Fair! Play to Win!!!", d:"Make things MORE FAVORABLE for yourselves, and LESS FAVORABLE for others.", img:V+"ff.webp", yt:"_Ql0e9lPU6k", cat:"2023" },
+  { t:"Regulations are USED to KNOCK OUT Competition — NOT to Make the Markets Fair", d:"Regulations are EXPOSED for their TRUE INTENTIONS.", img:V+"cr.webp", yt:"PyGRvc52PIU", cat:"2023" },
+  { t:"Rarible NFT Marketplace", d:"Get exclusive access to the world's first tradable Predictive Market Analyses (PMAs).", img:V+"rarible.webp", link:"https://rarible.com/tpr2-1/items", cat:"market" }
 ];
 const VID_CATS = [
   { k:"all", l:"All" }, { k:"2025", l:"PMAs 2025–28" }, { k:"2023", l:"PMAs 2023–25" }, { k:"market", l:"Marketplaces" }
@@ -1315,11 +1312,11 @@ function renderVideos(){
   $("#vidGrid").innerHTML = list.length ? list.map(v=>`
     <article class="vid rv">
       ${v.yt ? `<div class="vid-thumb" data-yt="${v.yt}">
-          <img decoding="async" src="${v.img}" alt="${esc(v.t)}" loading="lazy">
+          <img decoding="async" src="${v.img}" width="768" height="432" alt="${esc(v.t)}" loading="lazy">
           <button class="play" aria-label="Play ${esc(v.t)}"><i><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></i></button>
         </div>`
        : `<a class="vid-thumb" href="${v.link}" target="_blank" rel="noopener" aria-label="${esc(v.t)}">
-          <img decoding="async" src="${v.img}" alt="${esc(v.t)}" loading="lazy"></a>`}
+          <img decoding="async" src="${v.img}" width="768" height="432" alt="${esc(v.t)}" loading="lazy"></a>`}
       <div class="vid-body">
         <div class="tagline">${v.yt?"#thepimpreport":"Marketplace"}</div>
         <h3>${esc(v.t)}</h3><p>${esc(v.d)}</p>
