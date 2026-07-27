@@ -1533,45 +1533,170 @@ wireForm("#contactForm","#contactMsg",CFG.api.lead,"Message received. We'll get 
    yet, it falls back to lexical retrieval over the site's own
    content so the UX is real rather than a canned script.
    ═══════════════════════════════════════════════════════════ */
-const KB = [
-  { t:"What the P.I.M.P. Report is", src:"#about",
-    c:"The Proven Insights on Market Predictability Report has a 20+ year history of predicting future market movements and economic events up to many years in advance. Its reports are called predictive market analyses, or PMAs. All PMAs are dated upon completion, so they can be compared against Bloomberg, FT and CNBC reporting on the same topic — the PMAs always pre-date those reports." },
-  { t:"Mission", src:"#about",
-    c:"The mission is to give investors and traders leverage: a strategic advantage never before experienced." },
-  { t:"Why PMAs are NFTs", src:"#about",
-    c:"Because of ERC-721 technology, PMAs are structured as NFTs, making them digital assets that can be traded. Tradeable PMAs are positioned as the future of the DeFi revolution. Holders benefit twice: from the analysis, and from trading the asset." },
-  { t:"Limited series", src:"#about",
-    c:"PMAs are issued in limited series with a limited number minted per series. Only a few can obtain them, so only a few can benefit." },
-  { t:"Next drop", src:"#nfts",
-    c:"The next NFT drop is Series 2.01, US Real Estate Market 2025-2028: 10 NFTs at 22 ETH each. The analysis covers geo-political, economic and social forces shaping commercial and residential real estate over three years." },
-  { t:"The collection", src:"#nfts",
-    c:"Minted so far: TPR 2.01 Peak Performance, 2.02 Clairvoyence & God Power, 2.03 Self-Alchemization, 2.04 Consistency = Success, and 2.05 The Quickening — all in the US Real Estate Market 2025-28 collection, listed on Rarible. Coming next: TPR 2.11 US Equities, 2.21 Global Energy, and 2.31 US Treasuries." },
-  { t:"Sectors covered", src:"#pmas",
-    c:"PMAs cover equities and real estate, energy markets including oil, gas, renewables and EV storage, bond markets focused on Treasuries and mortgage-backed debt, plus two analytical lenses: socio-political economics and monetary analysis. Monetary analysis is global, not USD-only, and includes cryptocurrencies." },
-  { t:"Verification", src:"#about",
-    c:"PMAs are documented and dated. Bloomberg, the Financial Times, CNBC, the World Economic Forum and Bank of America have all published material that matches earlier PMAs — which is the verification claim: the PMA always pre-dates the headline." },
-  { t:"Deitric Muhammad", src:"#contact",
-    c:"Deitric Muhammad, known online as BigPimpin504, is the analyst behind The P.I.M.P. Report. He publishes market breakdowns on TikTok at @bigpimpin504 and YouTube at @prettyred5044, is on LinkedIn, and runs a Patreon. Phone: 832-658-0929." },
-  { t:"Where to buy", src:"#nfts",
-    c:"The NFTs are listed on Rarible at rarible.com/tpr2-1/items. Each minted PMA links directly to its Rarible token page." },
-  { t:"Videos", src:"#/videos",
-    c:"The portfolio page collects every published video: PMA breakdowns, Fed and rate-hike analysis, liquidity and deflation explainers, IMF and BlackRock commentary, plus NFT promos and verification clips." },
+/* Background the page assumes but never spells out. Everything else the
+   assistant knows is read off the page itself, so editing the site edits it. */
+const CONCEPTS = [
+  { t:"What a PMA is", src:"#about",
+    c:"A PMA is a Predictive Market Analysis — the report this whole site is built around. It is a written analysis that forecasts where a market or economy is heading, sometimes years ahead. The P.I.M.P. Report has a 20+ year documented history of making these calls with precision. Every PMA is dated on completion, so it can later be checked against the news coverage that follows it. Each one is now issued as a tradable ERC-721 NFT." },
   { t:"What an NFT is", src:"#about",
-    c:"An NFT is a non-fungible token: a unique record of ownership on a blockchain. ERC-721 is the Ethereum standard for them. Unlike a cryptocurrency, where every unit is interchangeable, each ERC-721 token is distinct and can carry its own metadata — which is what lets a written analysis be owned and traded as an asset." },
+    c:"An NFT is a non-fungible token: a unique record of ownership on a blockchain. Unlike a cryptocurrency, where every unit is interchangeable, each token is distinct and can carry its own metadata — which is what lets a written analysis be owned and traded as an asset." },
+  { t:"What ERC-721 is", src:"#nfts",
+    c:"ERC-721 is the Ethereum standard for non-fungible tokens. It defines how ownership of a unique token is recorded and transferred, so each PMA can be held, sold or traded like any other on-chain asset. Every minted PMA in this collection is an ERC-721 token on Ethereum." },
   { t:"What DeFi is", src:"#about",
-    c:"DeFi, or decentralised finance, is financial activity built on public blockchains rather than banks and brokerages — lending, trading and asset issuance run by smart contracts. Tradable PMAs sit in that world: the research itself becomes a transferable on-chain asset." }
+    c:"DeFi, or decentralised finance, is financial activity built on public blockchains rather than banks and brokerages — lending, trading and asset issuance run by smart contracts. Tradable PMAs sit in that world: the research itself becomes a transferable on-chain asset." },
+  { t:"What ETH is", src:"#nfts",
+    c:"ETH is Ether, the native currency of the Ethereum blockchain. It is the unit the NFTs in this collection are priced and paid in, from an Ethereum wallet." },
+  { t:"How to buy a PMA", src:"#nfts",
+    c:"The minted PMAs are listed on Rarible at rarible.com/tpr2-1/items. Each minted piece links straight to its own Rarible token page, where you buy it with ETH from an Ethereum wallet. Pieces marked coming soon are not minted yet." },
+  { t:"Who Deitric Muhammad is", src:"#contact",
+    c:"Deitric Muhammad, known online as BigPimpin504, is the analyst behind The P.I.M.P. Report. He publishes market breakdowns on TikTok at @bigpimpin504 and on YouTube at @prettyred5044, runs a Patreon, and is on LinkedIn. Phone: 832-658-0929." }
 ];
-const STOP = new Set("the a an and or of to in is are for on with what how why who when do does about me you your it this that i".split(" "));
 
-function retrieve(q){
-  const terms = q.toLowerCase().replace(/[^a-z0-9\s]/g," ").split(/\s+/).filter(w=>w.length>2 && !STOP.has(w));
-  if(!terms.length) return [];
-  return KB.map(k=>{
-    const hay = (k.t+" "+k.c).toLowerCase();
-    let score = 0;
-    terms.forEach(t=>{ if(hay.includes(t)) score += k.t.toLowerCase().includes(t) ? 3 : 1; });
-    return {k,score};
-  }).filter(x=>x.score>0).sort((a,b)=>b.score-a.score).slice(0,3).map(x=>x.k);
+/* ── Retrieval index, built from this page ──
+   Sections, PMAs, NFTs and videos each become a passage. Built lazily on first
+   use so it never lands on the load path. */
+const STOP = new Set(("a about an and any are as at be been but by can could did do does for from get got had has have how i if in into is it its me my no not of on or our so than that the their them then there these they this to was we were what when where which who whom why will with would you your").split(" "));
+
+/* Domain vocabulary, so "how much" reaches the price and "buy" reaches Rarible. */
+const SYN = {
+  pma:["predictive","market","analysis","analyses","report"],
+  nft:["erc","721","token","tokens","tradable","tradeable"],
+  price:["eth","cost","costs","much","expensive","pricing","22"],
+  cost:["eth","price","much","22"],
+  buy:["rarible","marketplace","mint","minted","purchase","own","sell","trade"],
+  drop:["release","series","minting","next","upcoming"],
+  proof:["verified","verification","bloomberg","ft","cnbc","predate","dated"],
+  accurate:["accuracy","precision","precise","documented","track","record"],
+  sector:["sectors","equities","energy","treasuries","bonds","estate","real"],
+  video:["videos","youtube","portfolio","watch","clip","clips"],
+  contact:["phone","email","reach","call","touch","message"],
+  founder:["deitric","muhammad","bigpimpin504","analyst","who","behind"]
+};
+
+const stem = w => w.replace(/ies$/,"y").replace(/(sses|shes|ches)$/,"$1").replace(/(ing|ed|es|s)$/,"");
+const toks = s => String(s).toLowerCase().replace(/[^a-z0-9\s]/g," ").split(/\s+/)
+  .filter(w => w.length > 1 && !STOP.has(w)).map(stem);
+
+let CORPUS = null;
+function buildCorpus(){
+  if(CORPUS) return CORPUS;
+  const docs = [];
+  /* w = passage weight. Video titles are short and keyword-dense, so at equal
+     weight they outrank the prose that actually explains things — "how are the
+     PMAs verified" would return a clip title instead of the answer. */
+  const add = (t,c,src,w=1,kind="") => {
+    c = String(c).replace(/\s+/g," ").trim();
+    if(c.length > 40) docs.push({t:String(t).trim(), c, src, w, kind});
+  };
+
+  // Section prose, straight off the rendered page.
+  $$("#view-home .sec").forEach(sec=>{
+    const h = sec.querySelector("h2"), idx = sec.querySelector(".sec-idx span");
+    const title = h ? h.textContent.trim() : idx ? idx.textContent.trim() : "Section";
+    const text = $$("p,blockquote",sec)
+      .filter(p => !p.closest(".pma,.feat-card,.vid,.nft,.form-note,.form-msg"))
+      .map(p => p.textContent.trim()).filter(Boolean).join(" ");
+    add(title, text, sec.id ? "#"+sec.id : "#top");
+  });
+
+  // Structured content reads better as one passage each.
+  PMAS.forEach(p => add(p.t, p.k+". "+p.t+". "+p.d, "#pmas"));
+  NFTS.filter(n=>n.id!=="—").forEach(n => add(
+    "TPR "+n.id+" — "+n.title,
+    `${n.title}, ${n.collection}. ${n.status==="minted"
+      ? "Minted as an ERC-721 token on Ethereum and listed on Rarible."
+      : "Announced but not yet minted."} ${n.desc}`, "#nfts"));
+  VIDEOS.forEach(v => add(v.t, v.t+". "+v.d, "#/videos", .55, "video"));
+  CONCEPTS.forEach(c => add(c.t, c.c, c.src, 1.15));
+
+  // Aggregates, computed so they can't drift from the data.
+  const minted = NFTS.filter(n=>n.status==="minted"), soon = NFTS.filter(n=>n.status==="soon");
+  add("The collection at a glance",
+    `The collection lists ${minted.length+soon.length} PMAs. ${minted.length} are minted and tradable: `
+    + minted.map(n=>`TPR ${n.id} ${n.title}`).join(", ")
+    + `. Announced but not yet minted: ` + soon.map(n=>`TPR ${n.id} ${n.title}`).join(", ")
+    + `. The current drop is Series 2.01, US Real Estate Market 2025-2028: 10 NFTs at 22 ETH each, listed on Rarible.`, "#nfts");
+  add("How the PMAs are verified",
+    "Every PMA is dated on completion, and that date is the whole point: the analysis can then be held up "
+    + "against reporting from Bloomberg, the Financial Times, CNBC and others on the same subject. "
+    + "Because the PMA always pre-dates those reports, the later coverage ends up verifying what the PMA already said. "
+    + "Bloomberg, the Financial Times, CNBC, the World Economic Forum, Bank of America, BlackRock and the IMF have all "
+    + "published material matching earlier PMAs. That is the track record: 20+ years, documented, dated, and confirmed after the fact.",
+    "#about", 1.25);
+  add("Pricing and the current drop",
+    "The current drop is Series 2.01, US Real Estate Market 2025-2028: 10 NFTs at 22 ETH each. "
+    + "That is how much one costs: 22 ETH per NFT, paid in ETH on Ethereum, and the pieces are listed on Rarible. "
+    + "Each series is limited, so only a limited number of PMAs are ever minted per series.", "#nfts", 1.4);
+  add("Contact and where to find us",
+    "Phone 832-658-0929. TikTok @bigpimpin504. YouTube @prettyred5044. Patreon and LinkedIn are both linked in the footer. "
+    + "The NFTs are on Rarible at rarible.com/tpr2-1/items. There is also a contact form and a newsletter signup on this page.", "#contact");
+  add("The published videos",
+    `There are ${VIDEOS.filter(v=>v.yt).length} published videos on the portfolio page, grouped as `
+    + VID_CATS.filter(c=>c.k!=="all").map(c=>c.l).join(", ")
+    + ". They cover PMA breakdowns, Fed and rate-hike analysis, liquidity and deflation, IMF and BlackRock commentary, and verification clips.", "#/videos");
+
+  // BM25 statistics.
+  const df = Object.create(null);
+  docs.forEach(d=>{
+    d.toks = toks(d.t+" "+d.t+" "+d.c);      // title twice = a light field boost
+    d.tf = Object.create(null);
+    d.toks.forEach(w => d.tf[w] = (d.tf[w]||0)+1);
+    d.len = d.toks.length;
+    d.hay = (d.t+" "+d.c).toLowerCase();
+    Object.keys(d.tf).forEach(w => df[w] = (df[w]||0)+1);
+  });
+  CORPUS = { docs, df, N:docs.length, avg: docs.reduce((a,d)=>a+d.len,0)/(docs.length||1) };
+  return CORPUS;
+}
+
+function search(q, k=3){
+  const C = buildCorpus();
+  const qt = toks(q);
+  if(!qt.length) return [];
+  const syn = [];
+  qt.forEach(w => { const s = SYN[w]; if(s) syn.push(...s.map(stem)); });
+  const terms = qt.concat(syn), ql = q.toLowerCase().trim();
+  // Ask about clips and the clips stop being penalised.
+  const wantVideo = /\b(video|videos|clip|clips|watch|youtube|episode)\b/.test(ql);
+  const K1 = 1.5, B = 0.75;
+  const scored = C.docs.map(d=>{
+    let s = 0;
+    terms.forEach((w,i)=>{
+      const f = d.tf[w]; if(!f) return;
+      const idf = Math.log(1 + (C.N - C.df[w] + .5)/(C.df[w] + .5));
+      s += (i < qt.length ? 1 : .3) * idf * (f*(K1+1))/(f + K1*(1 - B + B*d.len/C.avg));
+    });
+    if(ql.length > 7 && d.hay.includes(ql)) s += 6;    // exact phrase is decisive
+    return {d, s: s * (d.kind === "video" && wantVideo ? 1.15 : d.w)};
+  }).filter(x => x.s > 0).sort((a,b) => b.s - a.s);
+  if(!scored.length) return [];
+  const top = scored[0].s;
+  // Only keep passages competitive with the best, so answers stay tight.
+  return scored.filter(x => x.s >= Math.max(top*.45, .8)).slice(0,k).map(x => x.d);
+}
+
+/* Questions that deserve a computed answer rather than a retrieved passage. */
+function directAnswer(q){
+  const s = q.toLowerCase().trim();
+  const minted = NFTS.filter(n=>n.status==="minted"), soon = NFTS.filter(n=>n.status==="soon");
+  if(/^(hi|hey|hello|yo|sup|howdy|good (morning|afternoon|evening))\b/.test(s))
+    return { c:"Hey — ask me anything about the PMAs, the NFT collection, the next drop, or the track record behind it." };
+  if(/^(thanks|thank you|thx|cheers|ty)\b/.test(s)) return { c:"Any time." };
+  if(/(who|what) (are|r) (you|u)\b|your name/.test(s))
+    return { c:"I'm the Report assistant. I answer from this site's own content — the PMAs, the NFT collection, the videos, and the background on the analysis." };
+  if(/linked ?in/.test(s))
+    return { c:"Deitric Muhammad's LinkedIn is linked in the footer: [LinkedIn profile](https://www.linkedin.com/in/deitric-muhammad-58b0b125/).\n\nI can't read LinkedIn from here, so that profile is the source for his full professional history. What I can tell you from this site is that he's the analyst behind The P.I.M.P. Report, publishes as BigPimpin504 on TikTok and YouTube, and can be reached on 832-658-0929.",
+             src:{t:"Contact",src:"#contact"} };
+  if(/how (many|much).*(video|clip)/.test(s))
+    return { c:`There are ${VIDEOS.filter(v=>v.yt).length} published videos on the portfolio page.`, src:{t:"Videos",src:"#/videos"} };
+  if(/how many/.test(s) && /(nft|pma|minted|piece)/.test(s))
+    return { c:`${minted.length} PMAs are minted and tradable — ${minted.map(n=>"TPR "+n.id).join(", ")} — with ${soon.length} more announced: ${soon.map(n=>"TPR "+n.id).join(", ")}.\n\nThe current drop is **10 NFTs at 22 ETH each**.`,
+             src:{t:"Tradable NFTs",src:"#nfts"} };
+  if(/^(list|show|name)\b/.test(s) && /(nft|pma|collection|piece)/.test(s))
+    return { c:"The collection:\n\n" + NFTS.filter(n=>n.id!=="—").map(n =>
+               `**TPR ${n.id} — ${n.title}** · ${n.status==="minted"?"minted":"coming soon"} · ${n.collection}`).join("\n"),
+             src:{t:"Tradable NFTs",src:"#nfts"} };
+  return null;
 }
 
 const log=$("#botLog"), botEl=$("#bot"), botBtn=$("#botBtn");
@@ -1606,8 +1731,22 @@ async function streamIn(el,text){
   el.innerHTML = md(text);
 }
 
-const PROMPTS = ["What is a PMA?","How much is the next drop?","Who is Deitric Muhammad?","Explain ERC-721"];
-$("#botPrompts").innerHTML = PROMPTS.map(p=>`<button>${esc(p)}</button>`).join("");
+/* A pool rather than a fixed four — a new set surfaces after each answer, so the
+   suggestions keep leading somewhere instead of looking like the whole menu. */
+const PROMPT_POOL = [
+  "What is a PMA?","How much is the next drop?","Who is Deitric Muhammad?","Explain ERC-721",
+  "How do I buy one?","Which sectors do you cover?","How are the PMAs verified?",
+  "What is the track record?","List the collection","How many are minted?",
+  "What is DeFi?","Why are PMAs sold as NFTs?","What's in Series 2.01?",
+  "Tell me about the energy PMAs","What does monetary analysis mean?",
+  "How many videos are there?","How do I get in touch?","What is an NFT?",
+  "Why does the date on a PMA matter?","What's coming after real estate?"
+];
+function refreshPrompts(){
+  const pick = [...PROMPT_POOL].sort(()=>Math.random()-.5).slice(0,4);
+  $("#botPrompts").innerHTML = pick.map(p=>`<button>${esc(p)}</button>`).join("");
+}
+refreshPrompts();
 $("#botPrompts").addEventListener("click",e=>{ const b=e.target.closest("button"); if(b) send(b.textContent); });
 
 let botLocked = false;
@@ -1618,7 +1757,14 @@ function toggleBot(open){
   // On small phones the panel is full-screen, so the page behind it shouldn't scroll.
   if(open && !botLocked && mq("(max-width:520px)")){ lockScroll(true); botLocked = true; }
   else if(!open && botLocked){ lockScroll(false); botLocked = false; }
-  if(open){ $("#botInput").focus(); if(!log.children.length) bubble("Hey — I'm the Report assistant. Ask me about the PMAs, the NFT collection, blockchain basics, or Deitric's work.\n\nPick a prompt below, or type your own."); }
+  if(open){
+    $("#botInput").focus();
+    // Index while the greeting is being read, so the first question isn't the
+    // one that pays for it. Bound, or the callback loses its receiver.
+    if(window.requestIdleCallback) requestIdleCallback(()=>buildCorpus(),{timeout:600});
+    else setTimeout(buildCorpus, 1);
+    if(!log.children.length) bubble("Hey — I'm the Report assistant. I read this whole site, so ask me about any PMA, any piece in the collection, the drop, the videos, or the blockchain side of it.\n\nPick a prompt below, or type your own.");
+  }
 }
 botBtn.addEventListener("click",()=>toggleBot(true));
 $("#botClose").addEventListener("click",()=>toggleBot(false));
@@ -1652,19 +1798,34 @@ async function respond(q){
     return;
   }catch{ /* fall through to local retrieval */ }
 
-  // 2) Offline fallback: lexical retrieval over the site's own content.
-  await new Promise(r=>setTimeout(r,420));
+  // 2) No backend: answer from the index built out of this page.
+  await new Promise(r=>setTimeout(r,240));
   typing(false);
-  const hits = retrieve(q);
   const el = bubble("");
-  if(hits.length){
-    await streamIn(el, hits.map(h=>h.c).join("\n\n"));
-    el.innerHTML += `<div class="srcs">Sources: ${hits.map(s=>`<a href="${s.src}">${esc(s.t)}</a>`).join(" · ")}</div>`;
+  const cited = list => list.length
+    ? `<div class="srcs">Sources: ${list.map(s=>`<a href="${s.src}">${esc(s.t)}</a>`).join(" · ")}</div>` : "";
+
+  const direct = directAnswer(q);
+  if(direct){
+    await streamIn(el, direct.c);
+    el.innerHTML += cited(direct.src ? [direct.src] : []);
   }else{
-    await streamIn(el,"I don't have that in the knowledge base yet. Once the RAG backend is connected I'll be able to answer from uploaded documents too.\n\nIn the meantime, try asking about PMAs, the NFT series, the next drop, or how ERC-721 works — or call 832-658-0929.");
+    const hits = search(q);
+    if(hits.length){
+      await streamIn(el, hits.map(h=>h.c).join("\n\n"));
+      // One link per section, in case several passages share a source.
+      const seen = new Set();
+      el.innerHTML += cited(hits.filter(h => !seen.has(h.src) && seen.add(h.src)));
+    }else{
+      await streamIn(el,
+        "I couldn't find that on the site. I can cover the PMAs and the sectors they analyse, "
+        + "any piece in the NFT collection, the current drop and pricing, how ERC-721 and DeFi work, "
+        + "the verification claim, the videos, and how to get in touch.\n\n"
+        + "For anything outside that, call **832-658-0929** or use the contact form.");
+    }
   }
-  $("#botStatus").textContent = "● Offline mode — local knowledge base";
-  $("#botStatus").style.color = "#e0a33a";
+  refreshPrompts();
+  $("#botStatus").textContent = "● Answering from this page";
 }
 </script>
 </body>
