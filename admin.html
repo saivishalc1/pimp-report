@@ -223,6 +223,8 @@ td a:hover{text-decoration:underline}
     </div>
     <button class="btn btn-primary" type="submit" id="gateBtn">Sign in</button>
     <p class="err" id="gateErr" role="status"></p>
+    <p style="margin:18px 0 0;text-align:center;font-size:.82rem">
+      <a href="./" style="color:var(--muted)">← Back to the site</a></p>
   </form>
 </div>
 
@@ -240,6 +242,7 @@ td a:hover{text-decoration:underline}
         <button data-days="0">All</button>
       </div>
       <button class="btn" id="reload">Refresh</button>
+      <a class="btn" href="./" id="backToSite">View site</a>
       <button class="btn" id="signout" hidden>Sign out</button>
     </div>
   </header>
@@ -728,7 +731,9 @@ if(LIVE){
     <p>No database is connected yet, so there is no account to sign in to — and a password
     checked in the browser would not protect anything anyway. The preview shows only the
     events this browser recorded.</p>
-    <button class="btn btn-primary" id="previewBtn" type="button">Open the preview</button>`;
+    <button class="btn btn-primary" id="previewBtn" type="button">Open the preview</button>
+    <p style="margin:18px 0 0;text-align:center;font-size:.82rem">
+      <a href="./" style="color:var(--muted)">← Back to the site</a></p>`;
   $("#previewBtn").addEventListener("click", start);
 }
 </script>

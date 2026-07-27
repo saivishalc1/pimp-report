@@ -562,7 +562,9 @@ p{margin:0 0 1.05em}
 .bot-send svg{width:17px;height:17px;fill:#fff}
 
 /* ─── Footer ─── */
-.foot{border-top:1px solid var(--line);padding:clamp(50px,7vw,84px) 0 40px;background:rgba(8,9,11,.6)}
+/* Bottom padding clears the fixed chat button, which otherwise sits on top of
+   the last footer row (it was covering "Back to top", and now the admin link). */
+.foot{border-top:1px solid var(--line);padding:clamp(50px,7vw,84px) 0 96px;background:rgba(8,9,11,.6)}
 .foot-top{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:44px;margin-bottom:52px}
 @media(max-width:820px){.foot-top{grid-template-columns:1fr;gap:34px}}
 .foot h4{font-family:var(--f-mono);font-size:11px;font-weight:500;letter-spacing:.22em;text-transform:uppercase;
@@ -573,7 +575,16 @@ p{margin:0 0 1.05em}
 .foot-bot{display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:center;
   padding-top:28px;border-top:1px solid var(--line);font-family:var(--f-mono);font-size:10.5px;
   letter-spacing:.15em;text-transform:uppercase;color:var(--muted-2)}
+/* The desktop social rail is vertically centred, so on a short viewport it
+   reaches this row. Keep the row's right edge out from under it. */
+@media(min-width:821px){.foot-bot{padding-right:72px}}
 .foot-logo{height:38px;width:auto;margin-bottom:18px}
+/* Owner's way in to the dashboard. Deliberately quiet — it is not for visitors,
+   and the URL is not the protection anyway (the login is). */
+.foot-bot-links{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.admin-link{display:inline-flex;align-items:center;gap:7px;transition:color .3s}
+.admin-link svg{width:13px;height:13px;fill:currentColor;opacity:.75}
+.admin-link:hover{color:var(--red-hot)}
 
 /* Views */
 .view{display:none}
@@ -607,8 +618,9 @@ p{margin:0 0 1.05em}
   .drawer a{padding:16px 4px}
   .btn{padding:15px 24px}
 
-  /* The fixed social rail sits over the footer's last row — give it room. */
-  .foot{padding-bottom:calc(46px + 72px + env(safe-area-inset-bottom))}
+  /* On phones both the social rail (~74px) and the chat button (~132px) stack up
+     from the bottom edge, so the last footer row has to clear the taller one. */
+  .foot{padding-bottom:calc(146px + env(safe-area-inset-bottom))}
 
   .stat{padding:26px 20px}
   .drop-img{min-height:0;aspect-ratio:1}
@@ -980,7 +992,13 @@ p{margin:0 0 1.05em}
     </div>
     <div class="foot-bot">
       <span>The P.I.M.P. Report — © 2026</span>
-      <a href="#top">Back to top ↑</a>
+      <span class="foot-bot-links">
+        <a class="admin-link" href="admin.html" rel="nofollow noopener">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 10V8a5 5 0 0 0-10 0v2H5.8A1.8 1.8 0 0 0 4 11.8v7.4A1.8 1.8 0 0 0 5.8 21h12.4a1.8 1.8 0 0 0 1.8-1.8v-7.4a1.8 1.8 0 0 0-1.8-1.8H17zM9 8a3 3 0 0 1 6 0v2H9V8zm4 8.7V18h-2v-1.3a1.8 1.8 0 1 1 2 0z"/></svg>
+          Admin log in
+        </a>
+        <a href="#top">Back to top ↑</a>
+      </span>
     </div>
   </div>
 </footer>
