@@ -1046,6 +1046,8 @@ const CFG = {
   api: { chat: "/api/chat", lead: "/api/leads", subscribe: "/api/subscribe" }
 };
 const IPFS = "https://copper-urgent-mole-3.mypinata.cloud/ipfs/bafybeigogtkehmufthe533dftlbaozlzb2ref6ilbmtz7hdkywkpj3pjxy";
+// Fallback artwork for a new entry that doesn't have its own cover yet.
+// Every current NFT has real art, so nothing uses this at the moment.
 const PLACEHOLDER = IPFS + "/img/WebDerbyWht.png";
 
 /* ═══════════════════════════════════════════════════════════
@@ -1084,15 +1086,15 @@ const NFTS = [
     desc:"The closing piece of the real estate series — the moment the forecast accelerates into the present." },
 
   { id:"2.11", title:"US Equities Market 2025–2028", collection:"Stocks & Equities", cat:"equities", status:"soon",
-    img:PLACEHOLDER, ar:1.5, link:"", token:"Not yet minted",
+    img:"assets/media/nft211-poster.jpg", link:"", token:"Not yet minted",
     desc:"Equity PMAs focus on future price movements driven by monetary analysis, capital movements, and the other factors that move equity markets." },
 
   { id:"2.21", title:"Global Energy Market 2025–28", collection:"Oil & Gas", cat:"energy", status:"soon",
-    img:PLACEHOLDER, ar:1.5, link:"", token:"Not yet minted",
+    img:"assets/media/nft221-poster.jpg", link:"", token:"Not yet minted",
     desc:"Energy PMAs cover oil, gas, renewables, and EV storage — analysed for future price movements, socio-political factors, and monetary performance." },
 
   { id:"2.31", title:"US Treasuries Market 2025–28", collection:"Treasuries", cat:"treasuries", status:"soon",
-    img:PLACEHOLDER, ar:1.5, link:"", token:"Not yet minted",
+    img:"assets/media/nft231-poster.jpg", link:"", token:"Not yet minted",
     desc:"Bond market PMAs focus mainly on Treasury bonds, mortgage-backed bonds, and other US-based debt instruments." },
 
   { id:"—", title:"Latest Videos & Marketplaces", collection:"Watch & buy", cat:"videos", status:"open",
